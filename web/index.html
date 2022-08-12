@@ -1,79 +1,163 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="zh-CN">
 <head>
-	<title>ServerStatus-Rust版</title>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="description" content="ServerStatus-Rust ServerStatus 探针 云监控">
-	<meta name="author" content="BotoX">
-	<meta name="robots" content="noindex">
+	<meta charset="UTF-8">
+	<title>Code Life</title>
+	<meta name="author" content="Airene">
+	<meta name="description" content="Airene,macOS">
 	<style>
-		body {
-			padding-top: 70px;
-			padding-bottom: 30px;
-		}
+body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, pre, code, form, fieldset, legend, input, button, textarea, p, blockquote {
+    margin: 0; padding: 0; text-align: left; font-size: 14px;
+}
+ol, ul { list-style: none; }
+
+body { color: #666; padding-top: 30px; font: normal 14px "Helvetica Neue", 'PingFang SC', 'Microsoft Yahei', sans-serif; }
+
+h2 {font-size: 18px; font-weight: 500; color: #000 }
+.pull-right { float: right; }
+.pull-left { float: left }
+.clear { zoom: 1 }
+.clear:after { content: ""; display: block; clear: both }
+
+a:link    { color: #666; text-decoration: none; }
+a:visited { color: #666; }
+a:hover   { color: #000; }
+
+a.bottom:link    { color: #8492A6; text-decoration: none; }
+a.bottom:visited { color: #8492A6; }
+a.bottom:hover   { color: #000; }
+
+#app { margin:0 auto; width:1000px;overflow: auto;}
+
+.logo strong { color:#475669; font-size: 32px; font-family: 'Lucida Grande',sans-serif; font-weight: 700; letter-spacing: -1.2px; }
+.logo span { font-size: 14px; display: block; margin-top: -5px; color: #555; }
+.nav { padding-top: 15px; }
+.nav li { float: left; margin-left: 20px; }
+
+.twitter { padding-top: 30px; }
+.twitter li { margin-bottom: 25px;overflow: auto;  }
+.twitter label { color: #000; padding-right: 20px; width: 80px; font-family: Georgia,sans-serif; display: inline-block }
+.twitter p {word-break: break-all;  line-height: 24px; width:900px;float: right; }
+.red {color: #b00;}
+
+.tablecss {
+    border-collapse: collapse;
+    border: none;
+    font-size: 14px;
+    width: 100%;
+    text-align: left;
+}
+
+.tablecss th, .tablecss td {
+    border-bottom: solid 1px #f4f4f4;
+}
+
+.tablecss tr:last-child td {
+    border-bottom: none;
+}
+
+.tablecss td {
+    padding: 8px 16px;
+}
+
+.tablecss th {
+    padding: 8px 10px;
+    border-bottom: 1px #ddd solid;
+}
+
+.tablecss th.right, .tablecss td.right {
+    text-align: right;
+}
+
+.tablecss td.red {
+    color: #c00;
+    font-weight: 700;
+}
+
+
+#bottom-wrap { height:90px; line-height: 90px; background: #EFF2F7; margin-top: 30px; }
+#bottom { margin:0 auto; width:1000px; text-align:center; color:#475669; overflow: auto; }
+
+
 	</style>
-
+	<script src="//cdn.staticfile.org/vue/3.2.37/vue.global.prod.min.js"></script>
 </head>
-
 <body>
-	<div role="navigation" class="navbar navbar-inverse navbar-fixed-top">
-		<div class="navbar-inner">
-			<div class="container">
-				<div class="navbar-header">
-					<button data-target=".navbar-collapse" data-toggle="collapse" class="navbar-toggle" type="button">
-						<span class="sr-only">Toggle navigation</span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-					</button>
-					<a href="#" class="navbar-brand">ServerStatus</a>
-				</div>
+<div id="app">
+	<div id="header"></div>
+	<table class="tablecss" style="width: 660px;margin: 40px auto 0;">
+		<tr>
+			<th id="name">节点名</th>
+			<th id="type">类型</th>
+			<th id="location">位置</th>
+			<th id="uptime">在线时间</th>
+			<th id="traffic">总流量 ↓|↑ 1111</th>
+			<th id="month_traffic" style="text-align: center;">月流量 ↓|↑  1111</th>
+			<th id="cpu">处理器</th>
+			<th id="ram">内存</th>
+			<th id="hdd">硬盘</th>
+			<th id="network">网络 ↓|↑</th>
+		</tr>
+		<tr v-for="item in host_list">
+			<td>{{ item.name }}</td>
+			<td>{{ item.type }}</td>
+			<td>{{ item.location }}</td>
+			<td>{{ item.uptime }}</td>
+			<td>{{ item.type }}</td>
+			<td>{{ item.type }}</td>
+			<td>{{ item.type }}</td>
+			<td>{{ item.type }}</td>
+			<td class="right">{{ item.price }}</td>
+			<td>{{ item.channel}}</td>
+		</tr>
+	</table>
+</div>
 
-			</div>
-		</div>
-	</div>
+<script>
 
-	<div class="container content">
-		<div id="loading-notice">
-			<noscript>
-				<div class="alert alert-danger" style="text-align: center;">
-					<strong>Enable JavaScript</strong> , please do it.
-				</div>
-			</noscript>
-			<div style="text-align: center;">
-				警告:如果出现此消息，请确保您已启用Javascript! <br />否则云监控主服务没启动或已关闭.
-			</div>
-			<p></p>
-		</div>
-		<table class="table table-striped table-condensed table-hover">
-			<thead>
-				<tr>
-					<th id="online_status" style="text-align: center;">协议</th>
-					<th id="month_traffic" style="text-align: center;">月流量 ↓|↑</th>
-					<th id="name">节点名</th>
-					<th id="type">类型</th>
-					<th id="location">位置</th>
-					<th id="uptime">在线时间</th>
-					<th id="load">负载</th>
-					<th id="network">网络 ↓|↑</th>
-					<th id="traffic">总流量 ↓|↑</th>
-					<th id="cpu">处理器</th>
-					<th id="ram">内存</th>
-					<th id="hdd">硬盘</th>
-					<th id="ping">联通 | 电信 | 移动</th>
-				</tr>
-			</thead>
-			<tbody id="servers">
-				<!-- Servers here \o/ -->
-			</tbody>
-		</table>
-		<br />
-		<div id="updated">Updating...</div>
-	</div>
+    const {createApp, ref} = Vue
+    const config = {
+        setup() {
+            let things = ref([])
+            fetch('api/things').then(res => res.json()).then((data) => {
+                things.value = data.things
+            });
 
+
+              let host_list = ref([{
+    "name":"h1",
+    "type":"kvm",
+    "location":"🏠",
+    "vnstat":false,
+    "online4":true,
+    "uptime":"132 天",
+    "network_rx":538,
+    "network_tx":8009,
+    "network_in":9483538069,
+    "network_out":11193736100,
+    "last_network_in":9483532729,
+    "last_network_out":11193672446,
+    "cpu":1,
+    "memory_total":2040708,
+    "memory_used":172936,
+    "swap_total":1048572,
+    "swap_used":5192,
+    "hdd_total":40220,
+    "hdd_used":4299,
+    "custom":"",
+    "latest_ts":1660302805
+}])
+
+            return {
+                things,
+                host_list
+            }
+        }
+    }
+    createApp(config).mount('#app');
+
+    macroHTML('header',header)
+    macroHTML('copyright',bottom)
+</script>
 </body>
-
 </html>

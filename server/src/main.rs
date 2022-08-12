@@ -99,6 +99,9 @@ async fn stats_report(req: Request<Body>) -> Result<Response<Body>> {
 async fn get_stats_json() -> Result<Response<Body>> {
     Ok(Response::builder()
         .header(header::CONTENT_TYPE, "application/json")
+        .header("Access-Control-Allow-Origin", "*")
+        .header("Access-Control-Allow-Headers", "*")
+        .header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
         .body(Body::from(G_STATS_MGR.get().unwrap().get_stats_json()))?)
 }
 

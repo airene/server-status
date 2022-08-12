@@ -95,23 +95,17 @@ impl StatsMgr {
 
                 let mut stat_c = stat;
                 let mut stat_t = stat_c.to_mut();
-                info!("debug1 `{:?}", stat_t);
                 //
                 if let Ok(mut hosts_map) = hosts_map_1.lock() {
-                    info!("debug2 `{:?}", stat_t);
                     let host_info = hosts_map.get_mut(&stat_t.name);
-                    info!("debug2 `{:?}", host_info);
                     if host_info.is_none() {
                         error!("invalid stat `{:?}", stat_t);
                         continue;
                     }
-                    info!("debug3 `{:?}", host_info);
                     let info = host_info.unwrap();
-                    info!("debug5 `{:?}", info);
                     if info.disabled {
                         continue;
                     }
-                    info!("debug4 ");
                     // 补齐
                     if stat_t.location.is_empty() {
                         stat_t.location = info.location.to_string();
