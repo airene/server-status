@@ -35,9 +35,6 @@ message StatRequest {
   optional string custom = 36;
   string location = 37;
 
-  string alias = 40;
-  uint64 weight = 41;
-
   string type = 42;
 
 }

@@ -177,11 +177,6 @@ async fn main() -> Result<()> {
         process::exit(1);
     }
 
-    // serv grpc
-    tokio::spawn(async move {
-        let addr = &*G_CONFIG.get().unwrap().grpc_addr;
-        grpc::serv_grpc(addr).await
-    });
     // init mgr
     let mut mgr = crate::stats::StatsMgr::new();
     mgr.init(G_CONFIG.get().unwrap())?;
@@ -189,6 +184,13 @@ async fn main() -> Result<()> {
         error!("can't set G_STATS_MGR");
         process::exit(1);
     }
+
+    // serv grpc
+    tokio::spawn(async move {
+        let addr = &*G_CONFIG.get().unwrap().grpc_addr;
+        grpc::serv_grpc(addr).await
+    });
+
     // serv http
     let http_service = make_service_fn(|_| async { Ok::<_, GenericError>(service_fn(main_service_func)) });
 

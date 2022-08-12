@@ -23,10 +23,7 @@ fn default_workspace() -> String {
 pub struct Host {
     pub name: String,
     pub password: String,
-    #[serde(default = "Default::default")]
-    pub alias: String,
     pub location: String,
-    pub r#type: String,
     #[serde(default = "u32::default")]
     pub monthstart: u32,
     #[serde(default = "default_as_true")]
@@ -40,8 +37,6 @@ pub struct Host {
     // user data
     #[serde(skip_serializing, skip_deserializing)]
     pub pos: usize,
-    #[serde(default = "Default::default", skip_serializing)]
-    pub weight: u64,
     #[serde(default = "Default::default")]
     pub latest_ts: u64,
 }
@@ -91,13 +86,9 @@ pub fn from_str(content: &str) -> Option<Config> {
 
     for (idx, host) in o.hosts.iter_mut().enumerate() {
         host.pos = idx;
-        if host.alias.is_empty() {
-            host.alias = host.name.to_owned();
-        }
         if host.monthstart < 1 || host.monthstart > 31 {
             host.monthstart = 1;
         }
-        host.weight = 10000_u64 - idx as u64;
         o.hosts_map.insert(host.name.to_owned(), host.clone());
     }
 

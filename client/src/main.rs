@@ -16,7 +16,7 @@ type Result<T> = std::result::Result<T, GenericError>;
 mod grpc;
 mod status;
 
-const INTERVAL_MS: u64 = 1000;
+const INTERVAL_MS: u64 = 3000;
 
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version = env!("APP_VERSION"), about, long_about = None)]
@@ -29,21 +29,8 @@ pub struct Args {
     pass: String,
     #[clap(short = 'n', long, value_parser, help = "enable vnstat, default:false")]
     vnstat: bool,
-    #[clap(long = "disable-tupd", value_parser, help = "disable t/u/p/d, default:false")]
-    disable_tupd: bool,
-    #[clap(long = "disable-ping", value_parser, help = "disable ping, default:false")]
-    disable_ping: bool,
-
-    #[clap(long = "ip-info", value_parser, help = "show ip info, default:false")]
-    ip_info: bool,
     #[clap(long = "json", value_parser, help = "use json protocol, default:false")]
     json: bool,
-
-    #[clap(long = "alias", value_parser, default_value = "unknown", help = "alias for host")]
-    alias: String,
-    #[clap(short, long, value_parser, default_value = "0", help = "weight for rank")]
-    weight: u64,
-
     #[clap(short = 't', long = "type", value_parser, default_value = "", help = "host type")]
     host_type: String,
     #[clap(long, value_parser, default_value = "", help = "location")]
@@ -60,7 +47,6 @@ fn sample_all(args: &Args, stat_base: &StatRequest) -> StatRequest {
     status::sample(args, &mut stat_rt);
 
     stat_rt.latest_ts = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
-
     stat_rt
 }
 
@@ -87,7 +73,7 @@ fn http_report(args: &Args, stat_base: &mut StatRequest) -> Result<()> {
         .build()?;
     loop {
         let stat_rt = sample_all(args, stat_base);
-        dbg!(&stat_rt);
+        // dbg!(&stat_rt);
         let body_data: Option<Vec<u8>>;
         let mut content_type = "application/octet-stream";
         if args.json {
@@ -163,18 +149,14 @@ async fn main() -> Result<()> {
         frame: "data".to_string(),
         online4: ipv4,
         vnstat: args.vnstat,
-        weight: args.weight,
         version: env!("CARGO_PKG_VERSION").to_string(),
         ..Default::default()
     };
 
-    if !args.host_type.is_empty() {
-        stat_base.r#type = args.host_type.to_owned();
-    }
     if !args.location.is_empty() {
         stat_base.location = args.location.to_owned();
     }
-    dbg!(&stat_base);
+    // dbg!(&stat_base);
 
     if args.addr.starts_with("http") {
         let result = http_report(&args, &mut stat_base);
