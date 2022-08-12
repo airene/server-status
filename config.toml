@@ -1,0 +1,33 @@
+# 侦听地址, ipv6 使用 [::]:9394
+grpc_addr = "0.0.0.0:9394"
+http_addr = "0.0.0.0:8080"
+# 默认30s无上报判定下线
+offline_threshold = 30
+
+# 管理员账号,不设置默认随机生成，用于查看 /detail, /map
+admin_user = ""
+admin_pass = ""
+
+# hosts 跟 hosts_group 两种配置模式任挑一种配置即可
+# name 主机唯一标识，不可重复，alias 为展示名
+# 使用 ansible 批量部署时可以用主机 hostname 作为 name，统一密码
+# notify = false 单独禁止单台机器的告警，一般针对网络差，频繁上下线
+# monthstart = 1 没启用vnstat时，表示月流量从每月哪天开始统计
+# disabled = true 单机禁用，跟删除这条配置的效果一样
+hosts = [
+  {name = "h1", password = "p1", alias = "n1", location = "🏠", type = "kvm"},
+  {name = "h2", password = "p2", alias = "n2", location = "🏢", type = "kvm", disabled = false},
+]
+
+#hosts = [
+#  {name = "h1", password = "p1", alias = "n1", location = "🏠", type = "kvm"},
+#  {name = "h2", password = "p2", alias = "n2", location = "🏢", type = "kvm", disabled = false},
+#  {name = "h3", password = "p3", alias = "n3", location = "🏡", type = "kvm", monthstart = 1},
+#  {name = "h4", password = "p4", alias = "n4", location = "🏡", type = "kvm", notify = true},
+#]
+
+# !!! 一键部署如果没问题则不需要动，Server 会自行根据你的域名生成 server_url
+# 修正一键部署，请自行替换 ssr.rs 为你的域名,
+# server_url = "https://ssr.rs/report"
+# stat_client 默认安装的路径
+workspace = "/opt/ServerStatus"

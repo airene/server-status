@@ -1,0 +1,50 @@
+syntax = "proto3";
+package server_status;
+
+message StatRequest {
+  string name = 1;
+  string version = 2;
+  uint64 latest_ts = 3;
+  string frame = 4;
+
+  bool vnstat = 6;
+
+  bool online4 = 7;
+
+  uint64 uptime = 9;
+
+
+  // netowrk
+  uint64 network_rx = 23;
+  uint64 network_tx = 24;
+  uint64 network_in = 25;
+  uint64 network_out = 26;
+
+  uint64 last_network_in = 27;
+  uint64 last_network_out = 28;
+
+  //
+  double cpu = 29;
+  uint64 memory_total = 30;
+  uint64 memory_used = 31;
+  uint64 swap_total = 32;
+  uint64 swap_used = 33;
+  uint64 hdd_total = 34;
+  uint64 hdd_used = 35;
+
+  optional string custom = 36;
+  string location = 37;
+
+  string alias = 40;
+  uint64 weight = 41;
+
+  string type = 42;
+
+}
+
+message Response {
+  int32 code = 1;
+  string message = 2;
+}
+
+service ServerStatus { rpc Report(StatRequest) returns (Response); }
