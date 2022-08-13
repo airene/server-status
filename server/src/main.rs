@@ -1,6 +1,5 @@
 #![deny(warnings)]
 // #![allow(unused)]
-extern crate serde_json;
 extern crate pretty_env_logger;
 #[macro_use] extern crate log;
 use bytes::Buf;

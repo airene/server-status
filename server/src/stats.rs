@@ -3,7 +3,6 @@ use anyhow::Result;
 use chrono::{Datelike, Local, Timelike};
 use lazy_static::lazy_static;
 use once_cell::sync::OnceCell;
-use std::borrow::Borrow;
 use std::borrow::BorrowMut;
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -154,10 +153,8 @@ impl StatsMgr {
         // timer thread
         let resp_json = self.resp_json.clone();
         let stats_data = self.stats_data.clone();
-        let hosts_map_2 = hosts_map_base.clone();
         let stat_map_2 = stat_map.clone();
         let mut latest_save_ts = 0_u64;
-        let mut latest_group_gc = 0_u64;
         thread::spawn(move || loop {
             thread::sleep(Duration::from_millis(500));
 
@@ -204,10 +201,6 @@ impl StatsMgr {
         });
 
         Ok(())
-    }
-
-    pub fn get_stats(&self) -> Arc<Mutex<StatsResp>> {
-        self.stats_data.clone()
     }
 
     pub fn get_stats_json(&self) -> String {
