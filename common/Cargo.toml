@@ -3,13 +3,13 @@ edition = "2021"
 name = "stat_common"
 version = "1.1.0"
 
-authors = ["doge <doge.py@gmail.com>"]
+authors = ["airene <linfanne@gmail.com>"]
 categories = ["monitoring-tools"]
 description = "A simple server monitoring tool"
-keywords = ["devops", "monitoring", "dashboard", "alerting"]
+keywords = ["devops", "monitoring", "dashboard"]
 license = "Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/zdz/ServerStatus-Rust"
+repository = "https://github.com/airene/server-status"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

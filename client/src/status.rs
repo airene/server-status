@@ -38,7 +38,7 @@ static MEMORY_REGEX: &str = r#"^(?P<key>\S*):\s*(?P<value>\d*)\s*kB"#;
 lazy_static! {
     static ref MEMORY_REGEX_RE: Regex = Regex::new(MEMORY_REGEX).unwrap();
 }
-pub fn get_memory() -> (u64, u64, u64, u64) {
+pub fn get_memory() -> (u64, u64) {
     let file = File::open("/proc/meminfo").unwrap();
     let buf_reader = BufReader::new(file);
     let mut res_dict = HashMap::new();
@@ -50,13 +50,11 @@ pub fn get_memory() -> (u64, u64, u64, u64) {
     }
 
     let mem_total = res_dict["MemTotal"];
-    let swap_total = res_dict["SwapTotal"];
-    let swap_free = res_dict["SwapFree"];
 
     let mem_used =
         mem_total - res_dict["MemFree"] - res_dict["Buffers"] - res_dict["Cached"] - res_dict["SReclaimable"];
 
-    (mem_total, mem_used, swap_total, swap_free)
+    (mem_total, mem_used)
 }
 
 
@@ -276,11 +274,9 @@ pub fn sample(args: &Args, stat: &mut StatRequest) {
 
     stat.uptime = get_uptime();
 
-    let (mem_total, mem_used, swap_total, swap_free) = get_memory();
+    let (mem_total, mem_used) = get_memory();
     stat.memory_total = mem_total;
     stat.memory_used = mem_used;
-    stat.swap_total = swap_total;
-    stat.swap_used = swap_total - swap_free;
 
     let (hdd_total, hdd_used) = get_hdd();
     stat.hdd_total = hdd_total;

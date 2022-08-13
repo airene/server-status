@@ -2,162 +2,256 @@
 <html lang="zh-CN">
 <head>
 	<meta charset="UTF-8">
-	<title>Code Life</title>
+	<title>ServerStatus</title>
 	<meta name="author" content="Airene">
 	<meta name="description" content="Airene,macOS">
 	<style>
-body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, pre, code, form, fieldset, legend, input, button, textarea, p, blockquote {
-    margin: 0; padding: 0; text-align: left; font-size: 14px;
-}
-ol, ul { list-style: none; }
+        body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, pre, code, form, fieldset, legend, input, button, textarea, p, blockquote {
+            margin: 0;
+            padding: 0;
+            text-align: left;
+            font-size: 14px;
+        }
 
-body { color: #666; padding-top: 30px; font: normal 14px "Helvetica Neue", 'PingFang SC', 'Microsoft Yahei', sans-serif; }
+        ol, ul {
+            list-style: none;
+        }
 
-h2 {font-size: 18px; font-weight: 500; color: #000 }
-.pull-right { float: right; }
-.pull-left { float: left }
-.clear { zoom: 1 }
-.clear:after { content: ""; display: block; clear: both }
+        body {
+            color: #666;
+            padding-top: 30px;
+            font: normal 14px "Helvetica Neue", 'PingFang SC', 'Microsoft Yahei', sans-serif;
+        }
 
-a:link    { color: #666; text-decoration: none; }
-a:visited { color: #666; }
-a:hover   { color: #000; }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
 
-a.bottom:link    { color: #8492A6; text-decoration: none; }
-a.bottom:visited { color: #8492A6; }
-a.bottom:hover   { color: #000; }
+        h1 span {
+            padding-top: 15px;
+            font-size: 12px;
+            float: right;
+        }
 
-#app { margin:0 auto; width:1000px;overflow: auto;}
+        h1 strong {
+            color: #222;
+        }
 
-.logo strong { color:#475669; font-size: 32px; font-family: 'Lucida Grande',sans-serif; font-weight: 700; letter-spacing: -1.2px; }
-.logo span { font-size: 14px; display: block; margin-top: -5px; color: #555; }
-.nav { padding-top: 15px; }
-.nav li { float: left; margin-left: 20px; }
+        a:link {
+            color: #06f;
+            text-decoration: none;
+        }
 
-.twitter { padding-top: 30px; }
-.twitter li { margin-bottom: 25px;overflow: auto;  }
-.twitter label { color: #000; padding-right: 20px; width: 80px; font-family: Georgia,sans-serif; display: inline-block }
-.twitter p {word-break: break-all;  line-height: 24px; width:900px;float: right; }
-.red {color: #b00;}
+        a:visited {
+            color: #06f;
+        }
 
-.tablecss {
-    border-collapse: collapse;
-    border: none;
-    font-size: 14px;
-    width: 100%;
-    text-align: left;
-}
+        a:hover {
+            color: #000;
+        }
 
-.tablecss th, .tablecss td {
-    border-bottom: solid 1px #f4f4f4;
-}
+        #app {
+            margin: 0 auto;
+            width: 95%;
+            overflow: auto;
+        }
 
-.tablecss tr:last-child td {
-    border-bottom: none;
-}
+        .tablecss {
+            border-collapse: collapse;
+            border: none;
+            font-size: 14px;
+            width: 100%;
+            text-align: left;
+        }
 
-.tablecss td {
-    padding: 8px 16px;
-}
+        .tablecss th {
+            padding: 8px 10px;
+            border-bottom: 1px #ddd solid;
+            color: #222;
+            text-align: center;
+        }
 
-.tablecss th {
-    padding: 8px 10px;
-    border-bottom: 1px #ddd solid;
-}
+        .tablecss td {
+            border-bottom: solid 1px #f4f4f4;
+        }
 
-.tablecss th.right, .tablecss td.right {
-    text-align: right;
-}
+        .tablecss tr:last-child td {
+            border-bottom: none;
+        }
 
-.tablecss td.red {
-    color: #c00;
-    font-weight: 700;
-}
+        .tablecss td {
+            padding: 8px 16px;
+            text-align: center;
+        }
 
+        .m-progress {
+            color: rgba(0, 0, 0, .65);
+            font-size: 13px;
+            margin: 10px 0;
+        }
 
-#bottom-wrap { height:90px; line-height: 90px; background: #EFF2F7; margin-top: 30px; }
-#bottom { margin:0 auto; width:1000px; text-align:center; color:#475669; overflow: auto; }
+        .m-progress-outer {
+            display: inline-block;
+            width: calc(100% - 45px);
+        }
 
+        .m-progress-inner {
+            width: 100%;
+            background-color: #f2f2f2;
+            border-radius: 100px;
+        }
 
-	</style>
+        @property --progress {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 0%;
+        }
+        .u-progress-bg {
+            background: linear-gradient(90deg, #81FBB8, #28C76F var(--progress), transparent 0);
+            border-radius: 100px;
+            height: 8px;
+            transition: .3s --progress;
+        }
+
+        .u-progress-text {
+            margin-left: 10px;
+            width: 45px;
+            color: rgba(0, 0, 0, .45);
+            text-align: left;
+            vertical-align: middle;
+        }
+
+    </style>
 	<script src="//cdn.staticfile.org/vue/3.2.37/vue.global.prod.min.js"></script>
 </head>
 <body>
 <div id="app">
-	<div id="header"></div>
-	<table class="tablecss" style="width: 660px;margin: 40px auto 0;">
+	<h1>
+		<a target="_blank" href="https://github.com/airene/server-status">ServerStatus </a>
+		<span>version: <strong>v1.0.0</strong></span>
+	</h1>
+	<table class="tablecss" style="margin: 40px auto 0;">
 		<tr>
 			<th id="name">节点名</th>
-			<th id="type">类型</th>
 			<th id="location">位置</th>
-			<th id="uptime">在线时间</th>
-			<th id="traffic">总流量 ↓|↑ 1111</th>
-			<th id="month_traffic" style="text-align: center;">月流量 ↓|↑  1111</th>
-			<th id="cpu">处理器</th>
+			<th id="uptime">开机</th>
+			<th id="traffic">总流量 ↓ ↑</th>
+			<th id="month_traffic" style="text-align: center;">月流量 ↓ ↑</th>
+			<th id="cpu" style="width: 180px">处理器</th>
 			<th id="ram">内存</th>
 			<th id="hdd">硬盘</th>
-			<th id="network">网络 ↓|↑</th>
+			<th id="network">网络 ↓ ↑</th>
 		</tr>
 		<tr v-for="item in host_list">
 			<td>{{ item.name }}</td>
-			<td>{{ item.type }}</td>
 			<td>{{ item.location }}</td>
 			<td>{{ item.uptime }}</td>
-			<td>{{ item.type }}</td>
-			<td>{{ item.type }}</td>
-			<td>{{ item.type }}</td>
-			<td>{{ item.type }}</td>
-			<td class="right">{{ item.price }}</td>
-			<td>{{ item.channel}}</td>
+			<td>{{ $filters.traffic(item.network_in, item.network_out) }}</td>
+			<td>{{ $filters.traffic(item.network_in - item.last_network_in, item.network_out - item.last_network_in) }}</td>
+			<td>
+				<progress-bar :progress_num="item.cpu"></progress-bar>
+			</td>
+			<td>{{ $filters.mem(item.memory_used, item.memory_total) }}</td>
+			<td>{{ $filters.hdd(item.hdd_used, item.hdd_total) }}</td>
+			<td>{{ $filters.network(item.network_rx, item.network_tx) }}</td>
 		</tr>
 	</table>
 </div>
 
 <script>
+    const ProgressBar = {
+        props: {
+            progress_num: {
+                type: Number,
+                default: 36
+            }
+        },
+        template: `
+          <div class="m-progress" style="width:180px;">
+          <div class="m-progress-outer">
+            <div class="m-progress-inner">
+              <div class="u-progress-bg" :style="{'--progress': progress_num+'%'}"></div>
+            </div>
+          </div>
+          <span class="u-progress-text">{{ progress_num }}%</span>
+          </div>
+        `
+    }
 
     const {createApp, ref} = Vue
     const config = {
         setup() {
-            let things = ref([])
-            fetch('api/things').then(res => res.json()).then((data) => {
-                things.value = data.things
-            });
-
-
-              let host_list = ref([{
-    "name":"h1",
-    "type":"kvm",
-    "location":"🏠",
-    "vnstat":false,
-    "online4":true,
-    "uptime":"132 天",
-    "network_rx":538,
-    "network_tx":8009,
-    "network_in":9483538069,
-    "network_out":11193736100,
-    "last_network_in":9483532729,
-    "last_network_out":11193672446,
-    "cpu":1,
-    "memory_total":2040708,
-    "memory_used":172936,
-    "swap_total":1048572,
-    "swap_used":5192,
-    "hdd_total":40220,
-    "hdd_used":4299,
-    "custom":"",
-    "latest_ts":1660302805
-}])
+            let host_list = ref([])
+            setInterval(() => {
+                fetch('/json/stats.json').then(res => res.json()).then((data) => {
+                    host_list.value = data.servers
+                });
+            }, 3000);
 
             return {
-                things,
                 host_list
             }
         }
     }
-    createApp(config).mount('#app');
+    const app = createApp(config)
+    app.component('ProgressBar', ProgressBar)
+    app.config.globalProperties.$filters = {
+        traffic(net_in, net_out) {
+            let trafficStr = "";
+            if (net_in < 1024 * 1024 * 1024 * 1024)
+                trafficStr += (net_in / 1024 / 1024 / 1024).toFixed(1) + "G";
+            else
+                trafficStr += (net_in / 1024 / 1024 / 1024 / 1024).toFixed(1) + "T";
+            trafficStr += " / "
+            if (net_out < 1024 * 1024 * 1024 * 1024)
+                trafficStr += (net_out / 1024 / 1024 / 1024).toFixed(1) + "G";
+            else
+                trafficStr += (net_out / 1024 / 1024 / 1024 / 1024).toFixed(1) + "T";
+            return trafficStr
+        },
+        hdd(used, total) {
+            let hdd = "";
+            if (used < 1000 * 1000)
+                hdd += (used / 1010).toFixed(1) + "G";
+            else
+                hdd += (used / 1000 / 1000).toFixed(1) + "T";
+            hdd += " / "
+            if (total < 1000 * 1000)
+                hdd += (total / 1010).toFixed(0) + "G";
+            else
+                hdd += (total / 1000 / 1000).toFixed(0) + "T";
+            return hdd
+        },
+        mem(used, total) {
+            let hdd = "";
+            if (used < 1000 * 1000)
+                hdd += (used / 1000).toFixed(0) + "M";
+            else
+                hdd += (used / 1000 / 1000).toFixed(1) + "G";
+            hdd += " / "
+            if (total < 1000 * 1000)
+                hdd += (total / 1000).toFixed(0) + "M";
+            else
+                hdd += (total / 1000 / 1000).toFixed(0) + "G";
+            return hdd
+        },
+        network(net_in, net_out) {
+            let hdd = "";
+            if (net_in < 1024 * 1024)
+                hdd += (net_in / 1024).toFixed(1) + "KB";
+            else
+                hdd += (net_in / 1024 / 1024).toFixed(1) + "MB";
+            hdd += " | "
+            if (net_out < 1024 * 1024)
+                hdd += (net_out / 1024).toFixed(1) + "KB";
+            else
+                hdd += (net_out / 1024 / 1024).toFixed(1) + "MB";
+            return hdd
+        }
+    }
+    app.mount('#app');
 
-    macroHTML('header',header)
-    macroHTML('copyright',bottom)
 </script>
 </body>
 </html>

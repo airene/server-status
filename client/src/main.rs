@@ -30,13 +30,7 @@ pub struct Args {
     #[clap(short = 'n', long, value_parser, help = "enable vnstat, default:false")]
     vnstat: bool,
     #[clap(long = "json", value_parser, help = "use json protocol, default:false")]
-    json: bool,
-    #[clap(short = 't', long = "type", value_parser, default_value = "", help = "host type")]
-    host_type: String,
-    #[clap(long, value_parser, default_value = "", help = "location")]
-    location: String,
-    // #[clap(long = "debug", help = "debug mode, default:false")]
-    // debug: bool,
+    json: bool
 }
 
 fn sample_all(args: &Args, stat_base: &StatRequest) -> StatRequest {
@@ -84,7 +78,6 @@ fn http_report(args: &Args, stat_base: &mut StatRequest) -> Result<()> {
         } else {
             let buf = stat_rt.encode_to_vec();
             body_data = Some(buf);
-            // content_type = "application/octet-stream";
         }
         // byte 581, json str 1281
         // dbg!(&body_data.as_ref().unwrap().len());
@@ -126,11 +119,11 @@ fn http_report(args: &Args, stat_base: &mut StatRequest) -> Result<()> {
 async fn main() -> Result<()> {
     pretty_env_logger::init();
     let args = Args::parse();
-    dbg!(&args);
+    // dbg!(&args);
 
     // support check
     if !System::IS_SUPPORTED {
-        panic!("当前系统不支持，请切换到Python跨平台版本!");
+        panic!("当前系统不支持!");
     }
 
     // use native
@@ -153,9 +146,6 @@ async fn main() -> Result<()> {
         ..Default::default()
     };
 
-    if !args.location.is_empty() {
-        stat_base.location = args.location.to_owned();
-    }
     // dbg!(&stat_base);
 
     if args.addr.starts_with("http") {

@@ -27,15 +27,11 @@ message StatRequest {
   double cpu = 29;
   uint64 memory_total = 30;
   uint64 memory_used = 31;
-  uint64 swap_total = 32;
-  uint64 swap_used = 33;
   uint64 hdd_total = 34;
   uint64 hdd_used = 35;
 
   optional string custom = 36;
   string location = 37;
-
-  string type = 42;
 
 }
 
