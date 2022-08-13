@@ -13,7 +13,6 @@ message StatRequest {
 
   uint64 uptime = 9;
 
-
   // netowrk
   uint64 network_rx = 23;
   uint64 network_tx = 24;
