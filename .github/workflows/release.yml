@@ -2,8 +2,8 @@ name: Release
 
 on:
   push:
-    branches:
-      - "main"
+    tags:
+      - "v*"
 
   workflow_dispatch:
 
@@ -38,26 +38,98 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
-      #- uses: actions/cache@v2
-      #  name: "Cache Setup"
-      #  with:
-      #    path: |
-      #      ~/.cargo/
-      #      ~/.cargo/git
-      #      target
-      #    key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}registry
-     # - name: Install cross
-     #   run: PROTOC=/usr/bin/protoc cargo install cross
+      #      - uses: actions/cache@v2
+      #        name: "Cache Setup"
+      #        with:
+      #          path: |
+      #            ~/.cargo/
+      #            ~/.cargo/git
+      #            target
+      #          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}registry
       - name: Cache
         uses: Swatinem/rust-cache@v2.0.0
-#      - name: Install protoc
-#        if: matrix.os == 'ubuntu-latest'
-#        run: sudo apt install -y protobuf-compiler libprotobuf-dev
-      #- name: Run tests
-      #run: cross test --release --target ${{ matrix.target }} --verbose
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
-        with:
-          version: '3.x'
+      - name: Install cross
+        run: cargo install cross
+      #      - name: Run tests
+      #        run: cross test --release --target ${{ matrix.target }} --verbose
       - name: Build release
-        run: cargo build --release
+        run: cross build --release --target ${{ matrix.target }}
+
+      - name: Install LLVM Strip
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install -y llvm
+
+      - name: LLVM Strip
+        if: matrix.os == 'ubuntu-latest'
+        continue-on-error: true
+        run: |
+          llvm-strip target/${{ matrix.target }}/release/stat_server${{matrix.suffix}}
+          llvm-strip target/${{ matrix.target }}/release/stat_client${{matrix.suffix}}
+          cp config.toml target/${{ matrix.target }}/release/
+          #cp systemd/stat_server.service target/${{ matrix.target }}/release/
+          #cp systemd/stat_client.service target/${{ matrix.target }}/release/
+
+      - name: Run UPX
+        # Upx may not support some platforms. Ignore the errors
+        continue-on-error: true
+        # Disable upx for mips. See https://github.com/upx/upx/issues/387
+        if: matrix.os == 'ubuntu-latest' && !contains(matrix.target, 'mips')
+        uses: crazy-max/ghaction-upx@v2
+        with:
+          version: latest
+          files: |
+            target/${{ matrix.target }}/release/stat_server${{matrix.suffix}}
+            target/${{ matrix.target }}/release/stat_client${{matrix.suffix}}
+          args: -q --best --lzma
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ServerStatus-${{ matrix.target }}
+          path: |
+            target/${{ matrix.target }}/release/stat_server${{matrix.suffix}}
+            target/${{ matrix.target }}/release/stat_client${{matrix.suffix}}
+            target/${{ matrix.target }}/release/config.toml
+
+      - name: Zip Release For Server
+        if: matrix.os == 'ubuntu-latest'
+        uses: TheDoctor0/zip-release@0.6.2
+        with:
+          type: zip
+          filename: server-${{ matrix.target }}.zip
+          directory: target/${{ matrix.target }}/release/
+          path: |
+            stat_server${{matrix.suffix}}
+            stat_server.service
+            config.toml
+
+      - name: Zip Release For Client
+        if: matrix.os == 'ubuntu-latest'
+        uses: TheDoctor0/zip-release@0.6.2
+        with:
+          type: zip
+          filename: client-${{ matrix.target }}.zip
+          directory: target/${{ matrix.target }}/release/
+          path: |
+            stat_client${{matrix.suffix}}
+            stat_client.service
+
+      # - name: Zip Release For MacOS/Win
+      #   if: matrix.os != 'ubuntu-latest'
+      #   uses: TheDoctor0/zip-release@0.6.2
+      #   with:
+      #     type: zip
+      #     filename: ServerStatus-${{ matrix.target }}.zip
+      #     directory: target/${{ matrix.target }}/release/
+      #     path: |
+      #       stat_server${{matrix.suffix}}
+      #       stat_client${{matrix.suffix}}
+
+      - name: Publish
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            target/${{ matrix.target }}/release/server-${{ matrix.target }}.zip
+            target/${{ matrix.target }}/release/client-${{ matrix.target }}.zip
+          generate_release_notes: true
+          draft: true
