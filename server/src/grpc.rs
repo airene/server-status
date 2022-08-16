@@ -6,6 +6,7 @@ use stat_common::server_status::server_status_server::{ServerStatus, ServerStatu
 use stat_common::server_status::StatRequest;
 
 use crate::G_STATS_MGR;
+use crate::G_CONFIG;
 
 #[derive(Default)]
 pub struct ServerStatusSrv {}
@@ -25,14 +26,27 @@ impl ServerStatus for ServerStatusSrv {
         }
 
         Ok(Response::new(server_status::Response {
-            code: 0,
+            code: 200,
             message: "ok".to_string(),
         }))
     }
 }
 
 fn check_auth(req: Request<()>) -> Result<Request<()>, Status> {
-    return Ok(req);
+    match req.metadata().get("authorization") {
+        Some(token) => {
+            let tuple = token.to_str().unwrap_or("").split("@_@").collect::<Vec<_>>();
+            if tuple.len() == 2 {
+                if let Some(cfg) = G_CONFIG.get() {
+                    if cfg.auth(tuple[0], tuple[1]) {
+                        return Ok(req);
+                    }
+                }
+            }
+            Err(Status::unauthenticated("invalid user && pass"))
+        }
+        _ => Err(Status::unauthenticated("invalid user && pass")),
+    }
 }
 
 pub async fn serv_grpc(addr: &str) -> anyhow::Result<()> {

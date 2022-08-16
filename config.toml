@@ -2,19 +2,12 @@
 grpc_addr = "0.0.0.0:9394"
 http_addr = "0.0.0.0:8080"
 
-# 管理员账号,不设置默认随机生成，用于查看 /detail, /map
-admin_user = ""
-admin_pass = ""
-
-
 # disabled = true 单机禁用，跟删除这条配置的效果一样
 hosts = [
-  {name = "h1", password = "p1", location = "🏠", disabled = false},
-  {name = "h2", password = "p2", location = "🏢", disabled = false},
+    { name = "h1", password = "p1", location = "🏠" },
+    { name = "h2", password = "p2", location = "🏢" },
 ]
 
-# !!! 一键部署如果没问题则不需要动，Server 会自行根据你的域名生成 server_url
-# 修正一键部署，请自行替换 ssr.rs 为你的域名,
-# server_url = "https://ssr.rs/report"
+# server_url = "https://127.0.0.1:/report"
 # stat_client 默认安装的路径
-workspace = "/opt/ServerStatus"
+workspace = "/opt/server-status"

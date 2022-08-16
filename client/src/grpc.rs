@@ -1,5 +1,4 @@
 // #![allow(unused)]
-use std::net::ToSocketAddrs;
 use std::thread;
 use std::time::Duration;
 use tonic::transport::Channel;
@@ -13,22 +12,7 @@ use crate::sample_all;
 use crate::Args;
 use crate::INTERVAL_MS;
 
-// TODO TLS
-
 pub async fn report(args: &Args, stat_base: &mut StatRequest) -> anyhow::Result<()> {
-    if !vec![stat_base.online4].iter().any(|&x| x) {
-        eprintln!("try get target network...");
-        let addr = args.addr.replace("grpc://", "");
-        let sock_addr = addr.to_socket_addrs()?.next().unwrap();
-
-        stat_base.online4 = sock_addr.is_ipv4();
-
-        eprintln!(
-            "get target network (ipv4, ipv6) => ({})",
-            stat_base.online4
-        );
-    }
-
     let auth_user: String;
     let ssr_auth: &[u8];
     auth_user = args.user.to_string();
@@ -37,7 +21,7 @@ pub async fn report(args: &Args, stat_base: &mut StatRequest) -> anyhow::Result<
     let token = MetadataValue::try_from(format!("{}@_@{}", auth_user, args.pass))?;
 
     let channel = Channel::from_shared(args.addr.to_string())?.connect().await?;
-    let timeout_channel = Timeout::new(channel, Duration::from_millis(3000));
+    let timeout_channel = Timeout::new(channel, Duration::from_millis(5000));
 
     let grpc_client = ServerStatusClient::with_interceptor(timeout_channel, move |mut req: Request<()>| {
         req.metadata_mut().insert("authorization", token.clone());
@@ -51,7 +35,7 @@ pub async fn report(args: &Args, stat_base: &mut StatRequest) -> anyhow::Result<
         let stat_rt = sample_all(args, stat_base);
         let mut client = grpc_client.clone();
         tokio::spawn(async move {
-            let request = tonic::Request::new(stat_rt);
+            let request = Request::new(stat_rt);
 
             match client.report(request).await {
                 Ok(resp) => {

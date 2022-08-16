@@ -9,28 +9,26 @@ message StatRequest {
 
   bool vnstat = 6;
 
-  bool online4 = 7;
-
   uint64 uptime = 9;
 
   // netowrk
-  uint64 network_rx = 23;
-  uint64 network_tx = 24;
-  uint64 network_in = 25;
-  uint64 network_out = 26;
+  uint64 network_rx = 13;
+  uint64 network_tx = 14;
+  uint64 network_in = 15;
+  uint64 network_out = 16;
 
-  uint64 last_network_in = 27;
-  uint64 last_network_out = 28;
+  uint64 last_network_in = 17;
+  uint64 last_network_out = 18;
 
   //
-  double cpu = 29;
-  uint64 memory_total = 30;
-  uint64 memory_used = 31;
-  uint64 hdd_total = 34;
-  uint64 hdd_used = 35;
+  double cpu = 19;
+  uint64 memory_total = 20;
+  uint64 memory_used = 21;
+  uint64 hdd_total = 24;
+  uint64 hdd_used = 25;
 
-  optional string custom = 36;
-  string location = 37;
+  optional string custom = 26;
+  string location = 27;
 
 }
 
@@ -39,4 +37,4 @@ message Response {
   string message = 2;
 }
 
-service ServerStatus { rpc Report(StatRequest) returns (Response); }
+service ServerStatus {rpc Report(StatRequest) returns (Response);}

@@ -1,20 +1,16 @@
-#![deny(warnings)]
-use anyhow::Result;
+//#![deny(warnings)]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::env;
 use std::fs;
-use uuid::Uuid;
 
-fn default_as_true() -> bool {
-    true
-}
 fn default_grpc_addr() -> String {
     "0.0.0.0:9394".to_string()
 }
+
 fn default_http_addr() -> String {
     "0.0.0.0:8080".to_string()
 }
+
 fn default_workspace() -> String {
     "/opt/ServerStatus".to_string()
 }
@@ -26,7 +22,7 @@ pub struct Host {
     pub location: String,
     #[serde(default = "u32::default")]
     pub monthstart: u32,
-    #[serde(default = "default_as_true")]
+    #[serde(default = "bool::default")]
     pub disabled: bool,
 
     #[serde(skip_deserializing)]
@@ -49,14 +45,6 @@ pub struct Config {
     pub grpc_addr: String,
 
     #[serde(default = "Default::default")]
-    pub offline_threshold: u64,
-    // admin user & pass
-    pub admin_user: Option<String>,
-    pub admin_pass: Option<String>,
-
-
-
-    #[serde(default = "Default::default")]
     pub hosts: Vec<Host>,
 
     // deploy
@@ -77,13 +65,12 @@ impl Config {
         }
         false
     }
-
 }
 
-pub fn from_str(content: &str) -> Option<Config> {
+fn from_str(content: &str) -> Option<Config> {
     let mut o = toml::from_str::<Config>(content).unwrap();
     o.hosts_map = HashMap::new();
-
+    // todo host pos 什么时候用 fangying
     for (idx, host) in o.hosts.iter_mut().enumerate() {
         host.pos = idx;
         if host.monthstart < 1 || host.monthstart > 31 {
@@ -92,29 +79,7 @@ pub fn from_str(content: &str) -> Option<Config> {
         o.hosts_map.insert(host.name.to_owned(), host.clone());
     }
 
-    if o.offline_threshold < 30 {
-        o.offline_threshold = 30;
-    }
-
-    if o.admin_user.is_none() || o.admin_user.as_ref()?.is_empty() {
-        o.admin_user = Some("admin".to_string());
-    }
-    if o.admin_pass.is_none() || o.admin_pass.as_ref()?.is_empty() {
-        o.admin_pass = Some(Uuid::new_v4().to_string());
-    }
-
-    eprintln!("✨ admin_user: {}", o.admin_user.as_ref()?);
-    eprintln!("✨ admin_pass: {}", o.admin_pass.as_ref()?);
-
     Some(o)
-}
-
-pub fn from_env() -> Option<Config> {
-    from_str(
-        env::var("SRV_CONF")
-            .expect("can't load config from env `SRV_CONF")
-            .as_str(),
-    )
 }
 
 pub fn from_file(cfg: &str) -> Option<Config> {
@@ -123,9 +88,3 @@ pub fn from_file(cfg: &str) -> Option<Config> {
         .ok()?
 }
 
-pub fn test_from_file(cfg: &str) -> Result<Config> {
-    fs::read_to_string(cfg)
-        .map(|contents| toml::from_str::<Config>(&contents))
-        .unwrap()
-        .map_err(anyhow::Error::new)
-}

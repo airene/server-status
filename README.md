@@ -1,4 +1,4 @@
-# ServerStatus Rust 云探针
+# ServerStatus 云探针
 
 ## 动机
 

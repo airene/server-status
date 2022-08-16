@@ -1,4 +1,4 @@
-// #![allow(unused)]
+//#![allow(unused)]
 use chrono::{Datelike, Local};
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -7,8 +7,6 @@ use std::fs;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
-use std::net::TcpStream;
-use std::net::{Shutdown, ToSocketAddrs};
 use std::process::Command;
 use std::str;
 use std::sync::Arc;
@@ -20,8 +18,6 @@ use crate::Args;
 use stat_common::server_status::StatRequest;
 
 const SAMPLE_PERIOD: u64 = 1000; //ms
-const TIMEOUT_MS: u64 = 1000;
-static IPV4_ADDR: &str = "ipv4.google.com:80";
 
 pub fn get_uptime() -> u64 {
     fs::read_to_string("/proc/uptime")
@@ -59,6 +55,7 @@ pub fn get_memory() -> (u64, u64) {
 
 
 static IFACE_IGNORE_VEC: &[&str] = &["lo", "docker", "vnet", "veth", "vmbr", "kube", "br-"];
+
 pub fn get_vnstat_traffic() -> (u64, u64, u64, u64) {
     let local_now = Local::now();
     let (mut network_in, mut network_out, mut m_network_in, mut m_network_out) = (0, 0, 0, 0);
@@ -124,7 +121,8 @@ pub fn get_sys_traffic() -> (u64, u64) {
     (network_in, network_out)
 }
 
-static DF_CMD:&str = "df -Tlm --total -t ext4 -t ext3 -t ext2 -t reiserfs -t jfs -t ntfs -t fat32 -t btrfs -t fuseblk -t zfs -t simfs -t xfs";
+static DF_CMD: &str = "df -Tlm --total -t ext4 -t ext3 -t ext2 -t reiserfs -t jfs -t ntfs -t fat32 -t btrfs -t fuseblk -t zfs -t simfs -t xfs";
+
 pub fn get_hdd() -> (u64, u64) {
     let (mut hdd_total, mut hdd_used) = (0, 0);
     let a = &Command::new("/bin/sh")
@@ -145,6 +143,7 @@ pub fn get_hdd() -> (u64, u64) {
     (hdd_total, hdd_used)
 }
 
+
 #[derive(Debug, Default)]
 pub struct NetSpeed {
     pub diff: f64,
@@ -159,7 +158,6 @@ lazy_static! {
     pub static ref G_NET_SPEED: Arc<Mutex<NetSpeed>> = Arc::new(Default::default());
 }
 
-#[allow(unused)]
 pub fn start_net_speed_collect_t() {
     thread::spawn(|| loop {
         let _ = File::open("/proc/net/dev").map(|file| {
@@ -200,7 +198,6 @@ pub fn start_net_speed_collect_t() {
 lazy_static! {
     pub static ref G_CPU_PERCENT: Arc<Mutex<f64>> = Arc::new(Default::default());
 }
-#[allow(unused)]
 pub fn start_cpu_percent_collect_t() {
     let mut pre_cpu: Vec<u64> = vec![0, 0, 0, 0];
     thread::spawn(move || loop {
@@ -238,34 +235,6 @@ pub fn start_cpu_percent_collect_t() {
 
         thread::sleep(Duration::from_millis(SAMPLE_PERIOD));
     });
-}
-
-pub fn get_network() -> (bool, bool) {
-    let mut network: [bool; 2] = [false, false];
-    let addrs = vec![IPV4_ADDR];
-    for (idx, probe_addr) in addrs.into_iter().enumerate() {
-        let _ = probe_addr.to_socket_addrs().map(|mut iter| {
-            if let Some(addr) = iter.next() {
-                info!("{} => {}", probe_addr, addr);
-
-                let r = TcpStream::connect_timeout(&addr, Duration::from_millis(TIMEOUT_MS)).map(|s| {
-                    network[idx] = true;
-                    s.shutdown(Shutdown::Both)
-                });
-
-                info!("{:?}", r);
-            };
-        });
-    }
-
-    (network[0], network[1])
-}
-
-#[derive(Debug, Default)]
-pub struct PingData {
-    pub probe_uri: String,
-    pub lost_rate: u32,
-    pub ping_time: u32,
 }
 
 pub fn sample(args: &Args, stat: &mut StatRequest) {

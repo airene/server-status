@@ -1,4 +1,5 @@
 #![allow(unused)]
+
 use anyhow::Result;
 use chrono::{Datelike, Local, Timelike};
 use lazy_static::lazy_static;
@@ -68,10 +69,7 @@ impl StatsMgr {
         }
     }
 
-    pub fn init(
-        &mut self,
-        cfg: &'static crate::config::Config
-    ) -> Result<()> {
+    pub fn init(&mut self, cfg: &'static crate::config::Config) -> Result<()> {
         let hosts_map_base = Arc::new(Mutex::new(cfg.hosts_map.clone()));
 
         // load last_network_in/out
@@ -105,15 +103,14 @@ impl StatsMgr {
                     if info.disabled {
                         continue;
                     }
-                    // 补齐
-                    if stat_t.location.is_empty() {
-                        stat_t.location = info.location.to_string();
-                    }
 
-                    info.latest_ts = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
-                    stat_t.latest_ts = info.latest_ts;
+                    stat_t.location = info.location.to_string();
+                    // 直接当前时间赋值
+                    // info.latest_ts = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+                    // stat_t.latest_ts = info.latest_ts;
+                    stat_t.latest_ts = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
 
-                    // last_network_in/out
+                    // last_network_in/out todo monthstart 逻辑 fangying 数据是用上传的数据 还是持久化的数据
                     if !stat_t.vnstat {
                         let local_now = Local::now();
                         if info.last_network_in == 0
@@ -150,7 +147,7 @@ impl StatsMgr {
             }
         });
 
-        // timer thread
+        // timer thread 做需要返回数据的服务
         let resp_json = self.resp_json.clone();
         let stats_data = self.stats_data.clone();
         let stat_map_2 = stat_map.clone();
@@ -168,12 +165,6 @@ impl StatsMgr {
                         continue;
                     }
                     let stat_c = stat.borrow_mut();
-                    let o = stat_c.to_mut();
-                    // 30s 下线
-                    if o.latest_ts + cfg.offline_threshold < now {
-                        o.online4 = false;
-                    }
-
                     resp.servers.push(stat_c.to_owned().into_owned());
                 }
             }
@@ -183,8 +174,8 @@ impl StatsMgr {
                 latest_save_ts = now;
                 if !resp.servers.is_empty() {
                     if let Ok(mut file) = File::create("stats.json") {
-                        file.write(serde_json::to_string(&resp).unwrap().as_bytes());
-                        file.flush();
+                        let _ = file.write(serde_json::to_string(&resp).unwrap().as_bytes());
+                        let _ = file.flush();
                         trace!("save stats.json succ!");
                     } else {
                         error!("save stats.json fail!");

@@ -9,9 +9,9 @@ jobs:
   Test:
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ ubuntu-latest ]
         # udeps requires nightly
-        rust: [nightly]
+        rust: [ nightly ]
 
     runs-on: ${{ matrix.os }}
 

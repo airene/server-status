@@ -1,7 +1,9 @@
-#![deny(warnings)]
+//#![deny(warnings)]
 // #![allow(unused)]
 extern crate pretty_env_logger;
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
+
 use bytes::Buf;
 use clap::Parser;
 use http_auth_basic::Credentials;
@@ -19,14 +21,15 @@ mod stats;
 
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{header, Body, Method, Request, Response, Server, StatusCode};
+
 type GenericError = Box<dyn std::error::Error + Send + Sync>;
 type Result<T> = std::result::Result<T, GenericError>;
 
 static NOTFOUND: &[u8] = b"Not Found";
 static UNAUTHORIZED: &[u8] = b"Unauthorized";
 
-static G_CONFIG: OnceCell<crate::config::Config> = OnceCell::new();
-static G_STATS_MGR: OnceCell<crate::stats::StatsMgr> = OnceCell::new();
+static G_CONFIG: OnceCell<config::Config> = OnceCell::new();
+static G_STATS_MGR: OnceCell<stats::StatsMgr> = OnceCell::new();
 
 #[derive(RustEmbed)]
 #[folder = "../web"]
@@ -34,14 +37,10 @@ static G_STATS_MGR: OnceCell<crate::stats::StatsMgr> = OnceCell::new();
 struct Asset;
 
 #[derive(Parser, Debug)]
-#[clap(author, version = env!("APP_VERSION"), about, long_about = None)]
+#[clap(author, version = env ! ("APP_VERSION"), about, long_about = None)]
 struct Args {
     #[clap(short, long, value_parser, default_value = "config.toml")]
     config: String,
-    #[clap(short = 't', long, value_parser, help = "config test, default:false")]
-    config_test: bool,
-    #[clap(long = "cloud", value_parser, help = "cloud mode, load cfg from env var: SRV_CONF")]
-    cloud: bool,
 }
 
 // stat report
@@ -85,7 +84,7 @@ async fn stats_report(req: Request<Body>) -> Result<Response<Body>> {
     }
 
     let mut resp = HashMap::new();
-    resp.insert(&"code", serde_json::Value::from(0_i32));
+    resp.insert(&"code", serde_json::Value::from(200_i32));
     let resp_str = serde_json::to_string(&resp)?;
 
     Ok(Response::builder()
@@ -118,9 +117,9 @@ async fn main_service_func(req: Request<Body>) -> Result<Response<Body>> {
         _ => {
             if req.method() == Method::GET
                 && (req_path.starts_with("/js/")
-                    || req_path.starts_with("/css/")
-                    || req_path.starts_with("/img/")
-                    || req_path.eq("/favicon.ico"))
+                || req_path.starts_with("/css/")
+                || req_path.starts_with("/img/")
+                || req_path.eq("/favicon.ico"))
             {
                 if let Some(data) = Asset::get(req_path) {
                     let ct = mime_guess::from_path(req_path);
@@ -154,25 +153,9 @@ async fn main() -> Result<()> {
 
     eprintln!("✨ {} {}", env!("CARGO_BIN_NAME"), env!("APP_VERSION"));
 
-    // config test
-    if args.config_test {
-        config::test_from_file(&args.config).unwrap();
-        eprintln!("✨ the conf file {} syntax is ok", &args.config);
-        eprintln!("✨ the conf file {} test is successful", &args.config);
-        process::exit(0);
-    }
-
     // config load
-    if let Some(cfg) = if args.cloud {
-        // export SRV_CONF=$(cat config.toml)
-        // echo "$SRV_CONF"
-        eprintln!("✨ run in cloud mode, load config from env");
-        config::from_env()
-    } else {
-        eprintln!("✨ run in normal mode, load conf from local file `{}", &args.config);
-        config::from_file(&args.config)
-    } {
-        debug!("{}", serde_json::to_string_pretty(&cfg).unwrap());
+    if let Some(cfg) = config::from_file(&args.config) {
+        debug!("config info :{}", serde_json::to_string_pretty(&cfg).unwrap());
         G_CONFIG.set(cfg).unwrap();
     } else {
         error!("can't parse config");
@@ -180,7 +163,7 @@ async fn main() -> Result<()> {
     }
 
     // init mgr
-    let mut mgr = crate::stats::StatsMgr::new();
+    let mut mgr = stats::StatsMgr::new();
     mgr.init(G_CONFIG.get().unwrap())?;
     if G_STATS_MGR.set(mgr).is_err() {
         error!("can't set G_STATS_MGR");
@@ -195,7 +178,6 @@ async fn main() -> Result<()> {
 
     // serv http
     let http_service = make_service_fn(|_| async { Ok::<_, GenericError>(service_fn(main_service_func)) });
-
     let http_addr = G_CONFIG.get().unwrap().http_addr.parse()?;
     eprintln!("🚀 listening on http://{}", http_addr);
     let server = Server::bind(&http_addr).serve(http_service);

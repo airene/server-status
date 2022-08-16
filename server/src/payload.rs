@@ -1,10 +1,8 @@
-#![deny(warnings)]
+//#![deny(warnings)]
+
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-fn default_as_true() -> bool {
-    true
-}
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct HostStat {
@@ -14,9 +12,6 @@ pub struct HostStat {
 
     #[serde(default = "bool::default")]
     pub vnstat: bool,
-
-    #[serde(default = "default_as_true")]
-    pub online4: bool,
 
     #[serde(rename(deserialize = "uptime"), skip_serializing)]
     pub uptime: u64,
@@ -57,6 +52,7 @@ pub struct StatsResp {
     pub updated: u64,
     pub servers: Vec<HostStat>,
 }
+
 impl StatsResp {
     pub fn new() -> Self {
         Self {

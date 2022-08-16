@@ -1,25 +1,28 @@
-#![deny(warnings)]
+//#![deny(warnings)]
 extern crate pretty_env_logger;
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
+
 use clap::Parser;
 use hyper::header;
 use prost::Message;
-use std::net::ToSocketAddrs;
 use std::thread;
 use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
 use sysinfo::{System, SystemExt};
 
 use stat_common::server_status::StatRequest;
+
 type GenericError = Box<dyn std::error::Error + Send + Sync>;
 type Result<T> = std::result::Result<T, GenericError>;
+
 mod grpc;
 mod status;
 
 const INTERVAL_MS: u64 = 3000;
 
 #[derive(Parser, Debug, Clone)]
-#[clap(author, version = env!("APP_VERSION"), about, long_about = None)]
+#[clap(author, version = env ! ("APP_VERSION"), about, long_about = None)]
 pub struct Args {
     #[clap(short, long, value_parser, default_value = "http://127.0.0.1:8080/report")]
     addr: String,
@@ -30,7 +33,7 @@ pub struct Args {
     #[clap(short = 'n', long, value_parser, help = "enable vnstat, default:false")]
     vnstat: bool,
     #[clap(long = "json", value_parser, help = "use json protocol, default:false")]
-    json: bool
+    json: bool,
 }
 
 fn sample_all(args: &Args, stat_base: &StatRequest) -> StatRequest {
@@ -45,21 +48,6 @@ fn sample_all(args: &Args, stat_base: &StatRequest) -> StatRequest {
 }
 
 fn http_report(args: &Args, stat_base: &mut StatRequest) -> Result<()> {
-    let mut domain = args.addr.split('/').collect::<Vec<&str>>()[2].to_owned();
-    if !domain.contains(':') {
-        if args.addr.contains("https") {
-            domain = format!("{}:443", domain);
-        } else {
-            domain = format!("{}:80", domain);
-        }
-    }
-    let tcp_addr = domain.to_socket_addrs()?.next().unwrap();
-    let ipv4 = tcp_addr.is_ipv4();
-    if ipv4 {
-        stat_base.online4 = ipv4;
-    }
-
-
     let http_client = reqwest::Client::builder()
         .pool_max_idle_per_host(1)
         .connect_timeout(Duration::from_secs(5))
@@ -126,7 +114,7 @@ async fn main() -> Result<()> {
         panic!("当前系统不支持!");
     }
 
-    // use native
+    // use native 计算cpu使用率和网速
     #[cfg(all(feature = "native", not(feature = "sysinfo")))]
     {
         eprintln!("enable feature native");
@@ -134,13 +122,9 @@ async fn main() -> Result<()> {
         status::start_net_speed_collect_t();
     }
 
-    let (ipv4, ipv6) = status::get_network();
-    eprintln!("get_network (ipv4, ipv6) => ({}, {})", ipv4, ipv6);
-
     let mut stat_base = StatRequest {
         name: args.user.to_string(),
         frame: "data".to_string(),
-        online4: ipv4,
         vnstat: args.vnstat,
         version: env!("CARGO_PKG_VERSION").to_string(),
         ..Default::default()
