@@ -27,7 +27,7 @@ message StatRequest {
   uint64 hdd_total = 24;
   uint64 hdd_used = 25;
 
-  optional string custom = 26;
+  string custom = 26;
   string location = 27;
 
 }
