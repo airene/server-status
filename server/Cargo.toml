@@ -3,7 +3,7 @@ edition = "2021"
 name = "stat_server"
 version = "0.9.1"
 
-rust-version = "1.62.1"
+rust-version = "1.63.0"
 
 authors = ["airene <linfanne@gmail.com>"]
 categories = ["monitoring-tools"]

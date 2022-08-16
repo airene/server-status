@@ -2,8 +2,8 @@ name: Release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - "main"
 
   workflow_dispatch:
 
@@ -47,7 +47,7 @@ jobs:
       #      target
       #    key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}registry
       - name: Install cross
-        run: cargo install cross
+        run: PROTOC=/usr/bin/protoc cargo install cross
 
       - name: Install protoc
         if: matrix.os == 'ubuntu-latest'
@@ -55,7 +55,7 @@ jobs:
       #- name: Run tests
       #run: cross test --release --target ${{ matrix.target }} --verbose
       - name: Build release
-        run: cross build --release --target ${{ matrix.target }}
+        run: PROTOC=/usr/bin/protoc cross build --release --target ${{ matrix.target }}
 
       - name: Install LLVM Strip
         if: matrix.os == 'ubuntu-latest'
