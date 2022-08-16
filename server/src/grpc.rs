@@ -5,8 +5,8 @@ use stat_common::server_status;
 use stat_common::server_status::server_status_server::{ServerStatus, ServerStatusServer};
 use stat_common::server_status::StatRequest;
 
-use crate::G_STATS_MGR;
 use crate::G_CONFIG;
+use crate::G_STATS_MGR;
 
 #[derive(Default)]
 pub struct ServerStatusSrv {}

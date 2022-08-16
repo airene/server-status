@@ -53,7 +53,6 @@ pub fn get_memory() -> (u64, u64) {
     (mem_total, mem_used)
 }
 
-
 static IFACE_IGNORE_VEC: &[&str] = &["lo", "docker", "vnet", "veth", "vmbr", "kube", "br-"];
 
 pub fn get_vnstat_traffic() -> (u64, u64, u64, u64) {
@@ -142,7 +141,6 @@ pub fn get_hdd() -> (u64, u64) {
 
     (hdd_total, hdd_used)
 }
-
 
 #[derive(Debug, Default)]
 pub struct NetSpeed {

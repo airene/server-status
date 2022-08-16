@@ -55,7 +55,6 @@ pub struct Config {
 
     #[serde(skip_deserializing)]
     pub hosts_map: HashMap<String, Host>,
-
 }
 
 impl Config {
@@ -87,4 +86,3 @@ pub fn from_file(cfg: &str) -> Option<Config> {
         .map(|contents| from_str(contents.as_str()))
         .ok()?
 }
-

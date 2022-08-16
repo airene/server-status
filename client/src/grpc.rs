@@ -13,10 +13,8 @@ use crate::Args;
 use crate::INTERVAL_MS;
 
 pub async fn report(args: &Args, stat_base: &mut StatRequest) -> anyhow::Result<()> {
-    let auth_user: String;
-    let ssr_auth: &[u8];
-    auth_user = args.user.to_string();
-    ssr_auth = b"single";
+    let auth_user: String = args.user.to_string();
+    let ssr_auth: &[u8] = b"single";
 
     let token = MetadataValue::try_from(format!("{}@_@{}", auth_user, args.pass))?;
 

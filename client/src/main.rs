@@ -73,10 +73,8 @@ fn http_report(args: &Args, stat_base: &mut StatRequest) -> Result<()> {
         let client = http_client.clone();
         let url = args.addr.to_string();
         let auth_pass = args.pass.to_string();
-        let auth_user: String;
-        let ssr_auth: &str;
-        auth_user = args.user.to_string();
-        ssr_auth = "single";
+        let auth_user: String =  args.user.to_string();
+        let ssr_auth: &str =  "single";
 
         // http
         tokio::spawn(async move {
