@@ -6,7 +6,7 @@ ENV RUST_BACKTRACE=1
 WORKDIR /app
 COPY ./ /app
 
-RUN apk add --no-cache musl-dev git cmake make g++
+RUN apk add --no-cache musl-dev git cmake make g++ protoc protobuf-dev
 RUN cargo build --release --bin stat_server
 RUN strip /app/target/release/stat_server
 
