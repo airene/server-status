@@ -22,4 +22,4 @@ tonic = { version = "0.8", features = ["tokio-rustls"] }
 prost = "0.11"
 
 [build-dependencies]
-tonic-build = "0.8"
+tonic-build = { version = "0.8", features = ["prost"] }
