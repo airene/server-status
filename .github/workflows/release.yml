@@ -51,7 +51,7 @@ jobs:
 
       - name: Install protoc
         if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get install -y protobuf-compiler
+        run: sudo apt install -y protobuf-compiler libprotobuf-dev
       #- name: Run tests
       #run: cross test --release --target ${{ matrix.target }} --verbose
       - name: Build release
