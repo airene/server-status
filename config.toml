@@ -1,6 +1,6 @@
 # 侦听地址, ipv6 使用 [::]:9394
-grpc_addr = "0.0.0.0:9879"
-http_addr = "0.0.0.0:9878"
+grpc_addr = "0.0.0.0:9880"
+http_addr = "0.0.0.0:9879"
 
 # disabled = true 单机禁用，跟删除这条配置的效果一样
 hosts = [

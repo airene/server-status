@@ -16,7 +16,7 @@ LABEL name=airene url=https://github.com/airene/server-status
 RUN apk add --no-cache libgcc
 COPY --from=builder /app/target/release/stat_server /app/stat_server
 
-EXPOSE 9878 9879
+EXPOSE 9879 9880
 ENTRYPOINT ["/app/stat_server"]
-
-CMD ["-c", "/root/config.toml"]
+WORKDIR /root
+CMD ["/app/stat_server","-c", "config.toml"]

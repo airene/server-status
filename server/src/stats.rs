@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
-use std::sync::mpsc::sync_channel;
+use std::sync::mpsc;
 use std::sync::mpsc::SyncSender;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -77,7 +77,7 @@ impl StatsMgr {
             self.load_last_network(&mut *hosts_map);
         }
 
-        let (stat_tx, stat_rx) = sync_channel(512);
+        let (stat_tx, stat_rx) = mpsc::sync_channel(512);
         STAT_SENDER.set(stat_tx).unwrap();
 
         let stat_map: Arc<Mutex<HashMap<String, Cow<HostStat>>>> = Arc::new(Mutex::new(HashMap::new()));
@@ -89,7 +89,7 @@ impl StatsMgr {
         thread::spawn(move || loop {
             while let Ok(stat) = stat_rx.recv() {
                 trace!("recv stat `{:?}", stat);
-
+                // 好像是解包
                 let mut stat_c = stat;
                 let mut stat_t = stat_c.to_mut();
                 //
@@ -105,7 +105,7 @@ impl StatsMgr {
                     }
 
                     stat_t.location = info.location.to_string();
-                    // 直接当前时间赋值
+                    // 直接当前时间赋值 host中也有这个字段 看要不要用 fangying
                     // info.latest_ts = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
                     // stat_t.latest_ts = info.latest_ts;
                     stat_t.latest_ts = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
@@ -113,6 +113,7 @@ impl StatsMgr {
                     // last_network_in/out todo monthstart 逻辑 fangying 数据是用上传的数据 还是持久化的数据
                     if !stat_t.vnstat {
                         let local_now = Local::now();
+                        // 初始化数据
                         if info.last_network_in == 0
                             || (stat_t.network_in != 0 && info.last_network_in > stat_t.network_in)
                             || (local_now.day() == info.monthstart && local_now.hour() == 0 && local_now.minute() < 5)
@@ -153,12 +154,13 @@ impl StatsMgr {
         let stat_map_2 = stat_map.clone();
         let mut latest_save_ts = 0_u64;
         thread::spawn(move || loop {
-            thread::sleep(Duration::from_millis(500));
+            thread::sleep(Duration::from_millis(1500));
 
             let mut resp = StatsResp::new();
             let now = resp.updated;
 
             if let Ok(mut host_stat_map) = stat_map_2.lock() {
+                // 如果禁用了
                 for (_, stat) in host_stat_map.iter_mut() {
                     if stat.disabled {
                         resp.servers.push(stat.to_owned().into_owned());
