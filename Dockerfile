@@ -17,6 +17,6 @@ RUN apk add --no-cache libgcc
 COPY --from=builder /app/target/release/stat_server /app/stat_server
 
 EXPOSE 9879 9880
-ENTRYPOINT ["/app/stat_server"]
 WORKDIR /root
-CMD ["/app/stat_server","-c", "config.toml"]
+ENTRYPOINT ["/app/stat_server"]
+CMD ["-c", "config.toml"]
