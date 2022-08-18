@@ -180,7 +180,7 @@
         setup() {
             let host_list = ref([])
             setInterval(() => {
-                fetch('http://192.168.1.90:9879/json/stats.json').then(res => res.json()).then((data) => {
+                fetch('/json/stats.json').then(res => res.json()).then((data) => {
                     host_list.value = data.servers
                 });
             }, 2000);

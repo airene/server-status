@@ -197,9 +197,9 @@ dependencies = [
 
 [[package]]
 name = "bumpalo"
-version = "3.10.0"
+version = "3.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37ccbd214614c6783386c1af30caf03192f17891059cecc394b4fb119e363de3"
+checksum = "c1ad822118d20d2c234f427000d5acc36eabe1e29a348c89b63dd60b13f28e5d"
 
 [[package]]
 name = "bytes"
@@ -357,9 +357,9 @@ dependencies = [
 
 [[package]]
 name = "either"
-version = "1.7.0"
+version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f107b87b6afc2a64fd13cac55fe06d6c8859f12d4b14cbcdd2c67d0976781be"
+checksum = "90e5c1c8368803113bf0c9584fc495a58b86dc8a29edbf8fe877d21d9507e797"
 
 [[package]]
 name = "encoding_rs"
@@ -1389,7 +1389,7 @@ checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 
 [[package]]
 name = "stat_client"
-version = "0.9.9"
+version = "1.0.1"
 dependencies = [
  "anyhow",
  "bytes",
@@ -1419,7 +1419,6 @@ dependencies = [
  "bytes",
  "prost",
  "serde",
- "serde_json",
  "tokio",
  "tonic",
  "tonic-build",
@@ -1427,7 +1426,7 @@ dependencies = [
 
 [[package]]
 name = "stat_server"
-version = "0.9.9"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "bytes",
@@ -1442,7 +1441,6 @@ dependencies = [
  "once_cell",
  "pretty_env_logger",
  "prost",
- "reqwest",
  "rust-embed",
  "serde",
  "serde_json",
@@ -1450,7 +1448,6 @@ dependencies = [
  "tokio",
  "toml",
  "tonic",
- "uuid",
 ]
 
 [[package]]
@@ -1872,16 +1869,6 @@ dependencies = [
  "idna",
  "matches",
  "percent-encoding",
-]
-
-[[package]]
-name = "uuid"
-version = "1.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd6469f4314d5f1ffec476e05f17cc9a78bc7a27a6a857842170bdf8d6f98d2f"
-dependencies = [
- "getrandom",
- "serde",
 ]
 
 [[package]]

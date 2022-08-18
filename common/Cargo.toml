@@ -16,7 +16,7 @@ repository = "https://github.com/airene/server-status"
 [dependencies]
 bytes = { version = "1", features = ["serde"] }
 serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
-serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
+#serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 tokio = { version = "1", features = ["full"] }
 tonic = { version = "0.8", features = ["tokio-rustls"] }
 prost = "0.11"
