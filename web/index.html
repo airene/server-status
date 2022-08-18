@@ -13,10 +13,6 @@
             font-size: 14px;
         }
 
-        ol, ul {
-            list-style: none;
-        }
-
         body {
             color: #666;
             padding-top: 30px;
@@ -133,28 +129,28 @@
 	</h1>
 	<table class="tablecss" style="margin: 40px auto 0;">
 		<tr>
-			<th id="name">节点名</th>
-			<th id="location">位置</th>
-			<th id="uptime">开机</th>
-			<th id="traffic">总流量 ↓ ↑</th>
-			<th id="month_traffic" style="text-align: center;">月流量 ↓ ↑</th>
-			<th id="cpu" style="width: 180px">处理器</th>
-			<th id="ram">内存</th>
-			<th id="hdd">硬盘</th>
-			<th id="network">网络 ↓ ↑</th>
+			<th>节点名</th>
+			<th>位置</th>
+			<th>开机</th>
+			<th>总流量 ↓ ↑</th>
+			<th style="width: 180px">处理器</th>
+			<th>内存</th>
+			<th>硬盘</th>
+			<th>网络 ↓ ↑</th>
+			<th>最后更新</th>
 		</tr>
 		<tr v-for="item in host_list">
 			<td>{{ item.name }}</td>
 			<td>{{ item.location }}</td>
 			<td>{{ item.uptime }}</td>
 			<td>{{ $filters.traffic(item.network_in, item.network_out) }}</td>
-			<td>{{ $filters.traffic(item.network_in - item.last_network_in, item.network_out - item.last_network_in) }}</td>
 			<td>
 				<progress-bar :progress_num="item.cpu"></progress-bar>
 			</td>
 			<td>{{ $filters.mem(item.memory_used, item.memory_total) }}</td>
 			<td>{{ $filters.hdd(item.hdd_used, item.hdd_total) }}</td>
 			<td>{{ $filters.network(item.network_rx, item.network_tx) }}</td>
+			<td>{{ $filters.timeFmt(item.latest_ts) }}</td>
 		</tr>
 	</table>
 </div>
@@ -184,10 +180,10 @@
         setup() {
             let host_list = ref([])
             setInterval(() => {
-                fetch('/json/stats.json').then(res => res.json()).then((data) => {
+                fetch('http://192.168.1.90:9879/json/stats.json').then(res => res.json()).then((data) => {
                     host_list.value = data.servers
                 });
-            }, 3000);
+            }, 2000);
 
             return {
                 host_list
@@ -248,10 +244,12 @@
             else
                 hdd += (net_out / 1024 / 1024).toFixed(1) + "MB";
             return hdd
+        },
+        timeFmt(last_ts) {
+        	return new Date( last_ts * 1000).toLocaleString();
         }
     }
     app.mount('#app');
-
 </script>
 </body>
 </html>

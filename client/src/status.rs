@@ -1,4 +1,4 @@
-//#![allow(unused)]
+#![allow(unused)]
 use chrono::{Datelike, Local};
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -55,9 +55,9 @@ pub fn get_memory() -> (u64, u64) {
 
 static IFACE_IGNORE_VEC: &[&str] = &["lo", "docker", "vnet", "veth", "vmbr", "kube", "br-"];
 
-pub fn get_vnstat_traffic() -> (u64, u64, u64, u64) {
+pub fn get_vnstat_traffic() -> (u64, u64) {
     let local_now = Local::now();
-    let (mut network_in, mut network_out, mut m_network_in, mut m_network_out) = (0, 0, 0, 0);
+    let (mut network_in, mut network_out) = (0, 0);
     let a = Command::new("/usr/bin/vnstat")
         .args(&["--json", "m"])
         .output()
@@ -71,23 +71,11 @@ pub fn get_vnstat_traffic() -> (u64, u64, u64, u64) {
             continue;
         }
         let total_o = iface["traffic"]["total"].as_object().unwrap();
-        let month_v = iface["traffic"]["month"].as_array().unwrap();
         network_in += total_o["rx"].as_u64().unwrap();
         network_out += total_o["tx"].as_u64().unwrap();
-
-        for data in month_v {
-            let year = data["date"]["year"].as_i64().unwrap() as i32;
-            let month = data["date"]["month"].as_i64().unwrap() as u32;
-            if local_now.year() != year || local_now.month() != month {
-                continue;
-            }
-
-            m_network_in += data["rx"].as_u64().unwrap();
-            m_network_out += data["tx"].as_u64().unwrap();
-        }
     }
 
-    (network_in, network_out, m_network_in, m_network_out)
+    (network_in, network_out)
 }
 
 static TRAFFIC_REGEX: &str =
@@ -236,9 +224,6 @@ pub fn start_cpu_percent_collect_t() {
 }
 
 pub fn sample(args: &Args, stat: &mut StatRequest) {
-    stat.version = env!("CARGO_PKG_VERSION").to_string();
-    stat.vnstat = args.vnstat;
-
     stat.uptime = get_uptime();
 
     let (mem_total, mem_used) = get_memory();
@@ -250,11 +235,9 @@ pub fn sample(args: &Args, stat: &mut StatRequest) {
     stat.hdd_used = hdd_used;
 
     if args.vnstat {
-        let (network_in, network_out, m_network_in, m_network_out) = get_vnstat_traffic();
+        let (network_in, network_out) = get_vnstat_traffic();
         stat.network_in = network_in;
         stat.network_out = network_out;
-        stat.last_network_in = network_in - m_network_in;
-        stat.last_network_out = network_out - m_network_out;
     } else {
         let (network_in, network_out) = get_sys_traffic();
         stat.network_in = network_in;

@@ -14,18 +14,14 @@ use crate::INTERVAL_MS;
 
 pub async fn report(args: &Args, stat_base: &mut StatRequest) -> anyhow::Result<()> {
     let auth_user: String = args.user.to_string();
-    let ssr_auth: &[u8] = b"single";
 
     let token = MetadataValue::try_from(format!("{}@_@{}", auth_user, args.pass))?;
 
     let channel = Channel::from_shared(args.addr.to_string())?.connect().await?;
-    let timeout_channel = Timeout::new(channel, Duration::from_millis(5000));
+    let timeout_channel = Timeout::new(channel, Duration::from_millis(3000));
 
     let grpc_client = ServerStatusClient::with_interceptor(timeout_channel, move |mut req: Request<()>| {
         req.metadata_mut().insert("authorization", token.clone());
-        req.metadata_mut()
-            .insert("ssr-auth", MetadataValue::try_from(ssr_auth).unwrap());
-
         Ok(req)
     });
 
@@ -34,7 +30,6 @@ pub async fn report(args: &Args, stat_base: &mut StatRequest) -> anyhow::Result<
         let mut client = grpc_client.clone();
         tokio::spawn(async move {
             let request = Request::new(stat_rt);
-
             match client.report(request).await {
                 Ok(resp) => {
                     info!("grpc report resp => {:?}", resp);

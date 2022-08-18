@@ -5,9 +5,6 @@ message StatRequest {
   string name = 1;
   string version = 2;
   uint64 latest_ts = 3;
-  string frame = 4;
-
-  bool vnstat = 6;
 
   uint64 uptime = 9;
 
@@ -17,9 +14,6 @@ message StatRequest {
   uint64 network_in = 15;
   uint64 network_out = 16;
 
-  uint64 last_network_in = 17;
-  uint64 last_network_out = 18;
-
   //
   double cpu = 19;
   uint64 memory_total = 20;
@@ -28,7 +22,6 @@ message StatRequest {
   uint64 hdd_used = 25;
 
   string custom = 26;
-  string location = 27;
 
 }
 

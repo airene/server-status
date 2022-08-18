@@ -9,9 +9,6 @@ pub struct HostStat {
     #[serde(default = "Default::default")]
     pub location: String,
 
-    #[serde(default = "bool::default")]
-    pub vnstat: bool,
-
     #[serde(rename(deserialize = "uptime"), skip_serializing)]
     pub uptime: u64,
     #[serde(rename(serialize = "uptime"), skip_deserializing)]
@@ -21,11 +18,6 @@ pub struct HostStat {
     pub network_tx: u64,
     pub network_in: u64,
     pub network_out: u64,
-
-    #[serde(default)]
-    pub last_network_in: u64,
-    #[serde(default)]
-    pub last_network_out: u64,
 
     pub cpu: f32,
     pub memory_total: u64,

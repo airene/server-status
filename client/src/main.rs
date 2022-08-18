@@ -73,9 +73,7 @@ fn http_report(args: &Args, stat_base: &mut StatRequest) -> Result<()> {
         let client = http_client.clone();
         let url = args.addr.to_string();
         let auth_pass = args.pass.to_string();
-        let auth_user: String =  args.user.to_string();
-        let ssr_auth: &str =  "single";
-
+        let auth_user: String = args.user.to_string();
         // http
         tokio::spawn(async move {
             match client
@@ -83,7 +81,6 @@ fn http_report(args: &Args, stat_base: &mut StatRequest) -> Result<()> {
                 .basic_auth(auth_user, Some(auth_pass))
                 .timeout(Duration::from_secs(3))
                 .header(header::CONTENT_TYPE, content_type)
-                .header("ssr-auth", ssr_auth)
                 .body(body_data.unwrap())
                 .send()
                 .await
@@ -122,8 +119,6 @@ async fn main() -> Result<()> {
 
     let mut stat_base = StatRequest {
         name: args.user.to_string(),
-        frame: "data".to_string(),
-        vnstat: args.vnstat,
         version: env!("CARGO_PKG_VERSION").to_string(),
         ..Default::default()
     };

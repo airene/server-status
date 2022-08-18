@@ -25,11 +25,6 @@ pub struct Host {
     #[serde(default = "bool::default")]
     pub disabled: bool,
 
-    #[serde(skip_deserializing)]
-    pub last_network_in: u64,
-    #[serde(skip_deserializing)]
-    pub last_network_out: u64,
-
     // user data
     #[serde(skip_serializing, skip_deserializing)]
     pub pos: usize,

@@ -26,56 +26,18 @@ const SAVE_INTERVAL: u64 = 60;
 static STAT_SENDER: OnceCell<SyncSender<Cow<HostStat>>> = OnceCell::new();
 
 pub struct StatsMgr {
-    resp_json: Arc<Mutex<String>>,
-    stats_data: Arc<Mutex<StatsResp>>,
+    resp_json: Arc<Mutex<String>>
 }
 
 impl StatsMgr {
     pub fn new() -> Self {
         Self {
-            resp_json: Arc::new(Mutex::new("{}".to_string())),
-            stats_data: Arc::new(Mutex::new(StatsResp::new())),
-        }
-    }
-
-    fn load_last_network(&mut self, hosts_map: &mut HashMap<String, Host>) {
-        let contents = fs::read_to_string("stats.json").unwrap_or_default();
-        if contents.is_empty() {
-            return;
-        }
-
-        if let Ok(stats_json) = serde_json::from_str::<serde_json::Value>(contents.as_str()) {
-            if let Some(servers) = stats_json["servers"].as_array() {
-                for v in servers {
-                    if let (Some(name), Some(last_network_in), Some(last_network_out)) = (
-                        v["name"].as_str(),
-                        v["last_network_in"].as_u64(),
-                        v["last_network_out"].as_u64(),
-                    ) {
-                        if let Some(srv) = hosts_map.get_mut(name) {
-                            srv.last_network_in = last_network_in;
-                            srv.last_network_out = last_network_out;
-
-                            trace!("{} => last in/out ({}/{}))", &name, last_network_in, last_network_out);
-                        }
-                    } else {
-                        error!("invalid json => {:?}", v);
-                    }
-                }
-                trace!("load stats.json succ!");
-            }
-        } else {
-            warn!("ignore invalid stats.json");
+            resp_json: Arc::new(Mutex::new("{}".to_string()))
         }
     }
 
     pub fn init(&mut self, cfg: &'static crate::config::Config) -> Result<()> {
         let hosts_map_base = Arc::new(Mutex::new(cfg.hosts_map.clone()));
-
-        // load last_network_in/out
-        if let Ok(mut hosts_map) = hosts_map_base.lock() {
-            self.load_last_network(&mut *hosts_map);
-        }
 
         let (stat_tx, stat_rx) = mpsc::sync_channel(512);
         STAT_SENDER.set(stat_tx).unwrap();
@@ -83,7 +45,7 @@ impl StatsMgr {
         let stat_map: Arc<Mutex<HashMap<String, Cow<HostStat>>>> = Arc::new(Mutex::new(HashMap::new()));
 
         // stat_rx thread
-        let hosts_map_1 = hosts_map_base.clone();
+        //let hosts_map_1 = hosts_map_base.clone();
         let stat_map_1 = stat_map.clone();
 
         thread::spawn(move || loop {
@@ -93,7 +55,7 @@ impl StatsMgr {
                 let mut stat_c = stat;
                 let mut stat_t = stat_c.to_mut();
                 //
-                if let Ok(mut hosts_map) = hosts_map_1.lock() {
+                if let Ok(mut hosts_map) = hosts_map_base.lock() {
                     let host_info = hosts_map.get_mut(&stat_t.name);
                     if host_info.is_none() {
                         error!("invalid stat `{:?}", stat_t);
@@ -109,22 +71,6 @@ impl StatsMgr {
                     // info.latest_ts = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
                     // stat_t.latest_ts = info.latest_ts;
                     stat_t.latest_ts = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
-
-                    // last_network_in/out todo monthstart 逻辑 fangying 数据是用上传的数据 还是持久化的数据
-                    if !stat_t.vnstat {
-                        let local_now = Local::now();
-                        // 初始化数据
-                        if info.last_network_in == 0
-                            || (stat_t.network_in != 0 && info.last_network_in > stat_t.network_in)
-                            || (local_now.day() == info.monthstart && local_now.hour() == 0 && local_now.minute() < 5)
-                        {
-                            info.last_network_in = stat_t.network_in;
-                            info.last_network_out = stat_t.network_out;
-                        } else {
-                            stat_t.last_network_in = info.last_network_in;
-                            stat_t.last_network_out = info.last_network_out;
-                        }
-                    }
 
                     // uptime str
                     let day = (stat_t.uptime as f64 / 3600.0 / 24.0) as i64;
@@ -148,13 +94,12 @@ impl StatsMgr {
             }
         });
 
-        // timer thread 做需要返回数据的服务
+        // timer thread 做需要返回数据的服务 返回用到的数据的更新频率
         let resp_json = self.resp_json.clone();
-        let stats_data = self.stats_data.clone();
         let stat_map_2 = stat_map.clone();
         let mut latest_save_ts = 0_u64;
         thread::spawn(move || loop {
-            thread::sleep(Duration::from_millis(1500));
+            thread::sleep(Duration::from_millis(1000));
 
             let mut resp = StatsResp::new();
             let now = resp.updated;
@@ -171,25 +116,9 @@ impl StatsMgr {
                 }
             }
 
-            // last_network_in/out save /60s
-            if latest_save_ts + SAVE_INTERVAL < now {
-                latest_save_ts = now;
-                if !resp.servers.is_empty() {
-                    if let Ok(mut file) = File::create("stats.json") {
-                        let _ = file.write(serde_json::to_string(&resp).unwrap().as_bytes());
-                        let _ = file.flush();
-                        trace!("save stats.json succ!");
-                    } else {
-                        error!("save stats.json fail!");
-                    }
-                }
-            }
             //
             if let Ok(mut o) = resp_json.lock() {
                 *o = serde_json::to_string(&resp).unwrap();
-            }
-            if let Ok(mut o) = stats_data.lock() {
-                *o = resp;
             }
         });
 
