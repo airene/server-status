@@ -27,6 +27,10 @@ jobs:
           toolchain: ${{ matrix.rust }}
           override: true
       # cache build to wait shorter on next builds
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.x'
       - uses: actions/cache@v2
         name: "Cache Setup"
         with:
