@@ -46,19 +46,19 @@ jobs:
       - name: Build release
         run: cross build --release --target ${{ matrix.target }}
 
-      - name: Install LLVM Strip
-        if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get install -y llvm
-
-      - name: LLVM Strip
-        if: matrix.os == 'ubuntu-latest'
-        continue-on-error: true
-        run: |
-          llvm-strip target/${{ matrix.target }}/release/stat_server${{matrix.suffix}}
-          llvm-strip target/${{ matrix.target }}/release/stat_client${{matrix.suffix}}
-          cp config.toml target/${{ matrix.target }}/release/
-          #cp systemd/stat_server.service target/${{ matrix.target }}/release/
-          #cp systemd/stat_client.service target/${{ matrix.target }}/release/
+#      - name: Install LLVM Strip
+#        if: matrix.os == 'ubuntu-latest'
+#        run: sudo apt-get install -y llvm
+#
+#      - name: LLVM Strip
+#        if: matrix.os == 'ubuntu-latest'
+#        continue-on-error: true
+#        run: |
+#          llvm-strip target/${{ matrix.target }}/release/stat_server${{matrix.suffix}}
+#          llvm-strip target/${{ matrix.target }}/release/stat_client${{matrix.suffix}}
+#          cp config.toml target/${{ matrix.target }}/release/
+#          #cp systemd/stat_server.service target/${{ matrix.target }}/release/
+#          #cp systemd/stat_client.service target/${{ matrix.target }}/release/
 
       - name: Run UPX
         # Upx may not support some platforms. Ignore the errors
