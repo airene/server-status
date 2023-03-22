@@ -1,9 +1,9 @@
 [package]
-edition = "2021"
 name = "stat_server"
-version = "1.0.0"
+version = "2.0.0"
+edition = "2021"
 
-rust-version = "1.63.0"
+rust-version = "1.67.1"
 
 authors = ["airene <linfanne@gmail.com>"]
 categories = ["monitoring-tools"]
@@ -19,7 +19,7 @@ repository = "https://github.com/airene/server-status"
 anyhow = "1"
 bytes = { version = "1", features = ["serde"] }
 chrono = "0.4"
-clap = { version = "3.2", features = ["derive", "unicode"] }
+clap = { version = "4.1.4", features = ["derive", "unicode"] }
 #futures = "0.3"
 #futures-util = {version = "0.3", default-features = false}
 http-auth-basic = "0.3"
@@ -36,10 +36,11 @@ prost = "0.11"
 #rhai = {version = "1.8.0", features = ["sync", "metadata", "decimal", "no_function", "no_module", "no_closure", "unchecked"]}
 rust-embed = "6.4"
 serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
-serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
+#serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
+serde_json = "1"
 stat_common = { path = "../common" }
 tokio = { version = "1", features = ["full"] }
-toml = "0.5"
+toml = "0.7.2"
 tonic = { version = "0.8", features = ["tokio-rustls"] }
 #url = "2.2.2"
 #uuid = { version = "1.1", default-features = false, features = ["serde", "v4"] }

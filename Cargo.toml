@@ -1,6 +1,7 @@
 [workspace]
 members = ["common", "server", "client"]
 
+#https://doc.rust-lang.org/cargo/reference/profiles.html
 [profile.release]
 codegen-units = 1
 lto = true

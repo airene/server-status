@@ -6,22 +6,22 @@ message StatRequest {
   string version = 2;
   uint64 latest_ts = 3;
 
-  uint64 uptime = 9;
+  uint64 uptime = 4;
 
   // netowrk
-  uint64 network_rx = 13;
-  uint64 network_tx = 14;
-  uint64 network_in = 15;
-  uint64 network_out = 16;
+  uint64 network_rx = 5;
+  uint64 network_tx = 6;
+  uint64 network_in = 7;
+  uint64 network_out = 8;
 
   //
-  double cpu = 19;
-  uint64 memory_total = 20;
-  uint64 memory_used = 21;
-  uint64 hdd_total = 24;
-  uint64 hdd_used = 25;
+  double cpu = 9;
+  uint64 memory_total = 10;
+  uint64 memory_used = 11;
+  uint64 hdd_total = 12;
+  uint64 hdd_used = 13;
 
-  string custom = 26;
+  string custom = 14;
 
 }
 

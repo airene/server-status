@@ -1,4 +1,5 @@
 //#![deny(warnings)]
+//下面三行是一起的 see https://crates.io/crates/pretty_env_logger
 extern crate pretty_env_logger;
 #[macro_use]
 extern crate log;

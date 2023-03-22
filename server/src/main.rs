@@ -1,5 +1,3 @@
-//#![deny(warnings)]
-// #![allow(unused)]
 extern crate pretty_env_logger;
 #[macro_use]
 extern crate log;
@@ -37,7 +35,7 @@ static G_STATS_MGR: OnceCell<stats::StatsMgr> = OnceCell::new();
 struct Asset;
 
 #[derive(Parser, Debug)]
-#[clap(author, version = env ! ("APP_VERSION"), about, long_about = None)]
+#[command(author, version, about, long_about = None)]
 struct Args {
     #[clap(short, long, value_parser, default_value = "config.toml")]
     config: String,
@@ -151,7 +149,7 @@ async fn main() -> Result<()> {
     pretty_env_logger::init();
     let args = Args::parse();
 
-    eprintln!("✨ {} {}", env!("CARGO_BIN_NAME"), env!("APP_VERSION"));
+    println!("Server start at: {} {}", env!("CARGO_BIN_NAME"), env!("APP_VERSION"));
 
     // config load
     if let Some(cfg) = config::from_file(&args.config) {
@@ -177,9 +175,9 @@ async fn main() -> Result<()> {
     });
 
     // serv http
-    let http_service = make_service_fn(|_| async { Ok::<_, GenericError>(service_fn(main_service_func)) });
     let http_addr = G_CONFIG.get().unwrap().http_addr.parse()?;
     eprintln!("🚀 listening on http://{}", http_addr);
+    let http_service = make_service_fn(|_| async { Ok::<_, GenericError>(service_fn(main_service_func)) });
     let server = Server::bind(&http_addr).serve(http_service);
     let graceful = server.with_graceful_shutdown(shutdown_signal());
     if let Err(e) = graceful.await {
