@@ -17,11 +17,17 @@ mod grpc;
 mod payload;
 mod stats;
 
-use hyper::service::{make_service_fn, service_fn};
-use hyper::{header, Body, Method, Request, Response, Server, StatusCode};
+use http_body_util::{BodyExt, Full};
+use hyper::body::{Bytes, Incoming};
+use hyper::server::conn::http1;
+use hyper::service::service_fn;
+use hyper::{header, Method, Request, Response, StatusCode};
+use hyper_util::rt::TokioIo;
+use tokio::net::TcpListener;
 
 type GenericError = Box<dyn std::error::Error + Send + Sync>;
 type Result<T> = std::result::Result<T, GenericError>;
+type BodyRsp = Full<Bytes>;
 
 static NOTFOUND: &[u8] = b"Not Found";
 static UNAUTHORIZED: &[u8] = b"Unauthorized";
@@ -42,7 +48,7 @@ struct Args {
 }
 
 // stat report
-async fn stats_report(req: Request<Body>) -> Result<Response<Body>> {
+async fn stats_report(req: Request<Incoming>) -> Result<Response<BodyRsp>> {
     let req_header = req.headers();
     // auth
     let mut auth_ok = false;
@@ -64,7 +70,8 @@ async fn stats_report(req: Request<Body>) -> Result<Response<Body>> {
 
     let mut json_data: Option<serde_json::Value> = None;
     if let Ok(content_type) = req_header.get(hyper::header::CONTENT_TYPE).unwrap().clone().to_str() {
-        let whole_body = hyper::body::aggregate(req).await?;
+        let content_type = content_type.to_string();
+        let whole_body = req.collect().await?.aggregate();
         // dbg!(content_type);
         if content_type.eq(&mime::APPLICATION_JSON.to_string()) {
             // json
@@ -88,26 +95,26 @@ async fn stats_report(req: Request<Body>) -> Result<Response<Body>> {
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/json")
-        .body(Body::from(resp_str))?)
+        .body(Full::from(resp_str))?)
 }
 
 // get json data
-async fn get_stats_json() -> Result<Response<Body>> {
+async fn get_stats_json() -> Result<Response<BodyRsp>> {
     Ok(Response::builder()
         .header(header::CONTENT_TYPE, "application/json")
         .header("Access-Control-Allow-Origin", "*")
         .header("Access-Control-Allow-Headers", "*")
         .header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-        .body(Body::from(G_STATS_MGR.get().unwrap().get_stats_json()))?)
+        .body(Full::from(G_STATS_MGR.get().unwrap().get_stats_json()))?)
 }
 
-async fn main_service_func(req: Request<Body>) -> Result<Response<Body>> {
+async fn main_service_func(req: Request<Incoming>) -> Result<Response<BodyRsp>> {
     let req_path = req.uri().path();
     match (req.method(), req_path) {
         (&Method::POST, "/report") => stats_report(req).await,
         (&Method::GET, "/json/stats.json") => get_stats_json().await,
         (&Method::GET, "/") | (&Method::GET, "/index.html") => {
-            let body = Body::from(Asset::get("/index.html").unwrap().data);
+            let body = Full::from(Bytes::from(Asset::get("/index.html").unwrap().data.into_owned()));
             Ok(Response::builder()
                 .header(header::CONTENT_TYPE, "text/html; charset=utf-8")
                 .body(body)?)
@@ -123,7 +130,7 @@ async fn main_service_func(req: Request<Body>) -> Result<Response<Body>> {
                     let ct = mime_guess::from_path(req_path);
                     return Ok(Response::builder()
                         .header(header::CONTENT_TYPE, ct.first_raw().unwrap())
-                        .body(Body::from(data.data))?);
+                        .body(Full::from(Bytes::from(data.data.into_owned())))?);
                 } else {
                     error!("can't get => {:?}", req_path);
                 }
@@ -175,13 +182,28 @@ async fn main() -> Result<()> {
     });
 
     // serv http
-    let http_addr = G_CONFIG.get().unwrap().http_addr.parse()?;
+    let http_addr: std::net::SocketAddr = G_CONFIG.get().unwrap().http_addr.parse()?;
     eprintln!("🚀 listening on http://{}", http_addr);
-    let http_service = make_service_fn(|_| async { Ok::<_, GenericError>(service_fn(main_service_func)) });
-    let server = Server::bind(&http_addr).serve(http_service);
-    let graceful = server.with_graceful_shutdown(shutdown_signal());
-    if let Err(e) = graceful.await {
-        eprintln!("server error: {}", e);
+    let listener = TcpListener::bind(http_addr).await?;
+    loop {
+        tokio::select! {
+            _ = shutdown_signal() => {
+                eprintln!("shutting down");
+                break;
+            }
+            conn = listener.accept() => {
+                let (stream, _) = conn?;
+                let io = TokioIo::new(stream);
+                tokio::spawn(async move {
+                    if let Err(e) = http1::Builder::new()
+                        .serve_connection(io, service_fn(main_service_func))
+                        .await
+                    {
+                        error!("server connection error: {}", e);
+                    }
+                });
+            }
+        }
     }
 
     Ok(())

@@ -33,8 +33,6 @@ pub struct HostStat {
     pub latest_ts: u64,
 
     #[serde(skip_serializing, skip_deserializing)]
-    pub pos: usize,
-    #[serde(skip_serializing, skip_deserializing)]
     pub disabled: bool,
 }
 

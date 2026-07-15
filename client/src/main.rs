@@ -5,12 +5,11 @@ extern crate pretty_env_logger;
 extern crate log;
 
 use clap::Parser;
-use hyper::header;
 use prost::Message;
+use reqwest::header;
 use std::thread;
 use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
-use sysinfo::{System, SystemExt};
 
 use stat_common::server_status::StatRequest;
 
@@ -106,7 +105,7 @@ async fn main() -> Result<()> {
     // dbg!(&args);
 
     // support check
-    if !System::IS_SUPPORTED {
+    if !sysinfo::IS_SUPPORTED_SYSTEM {
         panic!("当前系统不支持!");
     }
 

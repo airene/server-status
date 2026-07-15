@@ -1,5 +1,6 @@
 [workspace]
 members = ["common", "server", "client"]
+resolver = "2"
 
 #https://doc.rust-lang.org/cargo/reference/profiles.html
 [profile.release]

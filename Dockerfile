@@ -1,4 +1,4 @@
-FROM rust:1-alpine3.16 as builder
+FROM rust:1-alpine3.23 AS builder
 # This is important, see https://github.com/rust-lang/docker-rust/issues/85
 ENV RUSTFLAGS="-C target-feature=-crt-static"
 ENV RUST_BACKTRACE=1
@@ -10,7 +10,7 @@ RUN apk add --no-cache musl-dev git cmake make g++ protoc protobuf-dev
 RUN cargo build --release --bin stat_server
 RUN strip /app/target/release/stat_server
 
-FROM alpine:3.16 as production
+FROM alpine:3.23 AS production
 LABEL name=airene url=https://github.com/airene/server-status
 
 RUN apk add --no-cache libgcc

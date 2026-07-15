@@ -26,8 +26,6 @@ pub struct Host {
     pub disabled: bool,
 
     // user data
-    #[serde(skip_serializing, skip_deserializing)]
-    pub pos: usize,
     #[serde(default = "Default::default")]
     pub latest_ts: u64,
 }
@@ -64,9 +62,7 @@ impl Config {
 fn from_str(content: &str) -> Option<Config> {
     let mut o = toml::from_str::<Config>(content).unwrap();
     o.hosts_map = HashMap::new();
-    // todo host pos 什么时候用 fangying
-    for (idx, host) in o.hosts.iter_mut().enumerate() {
-        host.pos = idx;
+    for host in o.hosts.iter_mut() {
         if host.monthstart < 1 || host.monthstart > 31 {
             host.monthstart = 1;
         }
