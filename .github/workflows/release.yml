@@ -32,19 +32,18 @@ jobs:
           #   target: x86_64-pc-windows-msvc
           #   suffix: .exe
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
       - name: Cache
-        uses: Swatinem/rust-cache@v2.0.0
+        uses: Swatinem/rust-cache@v2
       - name: Install cross
         run: cargo install cross
       #- name: Run tests
       #  run: cross test --release --target ${{ matrix.target }} --verbose
       - name: Build release
         run: cross build --release --target ${{ matrix.target }}
+      - name: Copy config
+        run: cp config.toml target/${{ matrix.target }}/release/
 
 #      - name: Install LLVM Strip
 #        if: matrix.os == 'ubuntu-latest'
@@ -65,7 +64,7 @@ jobs:
         continue-on-error: true
         # Disable upx for mips. See https://github.com/upx/upx/issues/387
         if: matrix.os == 'ubuntu-latest' && !contains(matrix.target, 'mips')
-        uses: crazy-max/ghaction-upx@v2
+        uses: crazy-max/ghaction-upx@v4
         with:
           version: latest
           files: |
@@ -73,7 +72,7 @@ jobs:
             target/${{ matrix.target }}/release/stat_client${{matrix.suffix}}
           args: -q --best --lzma
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v7
         with:
           name: ServerStatus-${{ matrix.target }}
           path: |
@@ -83,26 +82,24 @@ jobs:
 
       - name: Zip Release For Server
         if: matrix.os == 'ubuntu-latest'
-        uses: TheDoctor0/zip-release@0.6.2
+        uses: TheDoctor0/zip-release@0.7.6
         with:
           type: zip
           filename: server-${{ matrix.target }}.zip
           directory: target/${{ matrix.target }}/release/
           path: |
             stat_server${{matrix.suffix}}
-            stat_server.service
             config.toml
 
       - name: Zip Release For Client
         if: matrix.os == 'ubuntu-latest'
-        uses: TheDoctor0/zip-release@0.6.2
+        uses: TheDoctor0/zip-release@0.7.6
         with:
           type: zip
           filename: client-${{ matrix.target }}.zip
           directory: target/${{ matrix.target }}/release/
           path: |
             stat_client${{matrix.suffix}}
-            stat_client.service
 
       # - name: Zip Release For MacOS/Win
       #   if: matrix.os != 'ubuntu-latest'
@@ -116,7 +113,7 @@ jobs:
       #       stat_client${{matrix.suffix}}
 
       - name: Publish
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
