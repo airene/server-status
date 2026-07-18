@@ -9,7 +9,6 @@ use stat_common::server_status::StatRequest;
 
 use crate::sample_all;
 use crate::Args;
-use crate::INTERVAL_MS;
 
 pub async fn report(args: &Args, stat_base: &mut StatRequest) -> anyhow::Result<()> {
     let auth_user: String = args.user.to_string();
@@ -41,6 +40,6 @@ pub async fn report(args: &Args, stat_base: &mut StatRequest) -> anyhow::Result<
             }
         });
 
-        thread::sleep(Duration::from_millis(INTERVAL_MS));
+        thread::sleep(Duration::from_secs(args.interval));
     }
 }

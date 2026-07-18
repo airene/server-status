@@ -19,8 +19,6 @@ type Result<T> = std::result::Result<T, GenericError>;
 mod grpc;
 mod status;
 
-const INTERVAL_MS: u64 = 3000;
-
 #[derive(Parser, Debug, Clone)]
 #[clap(author, version = env ! ("APP_VERSION"), about, long_about = None)]
 pub struct Args {
@@ -30,6 +28,14 @@ pub struct Args {
     user: String,
     #[clap(short, long, value_parser, default_value = "p1", help = "password")]
     pass: String,
+    #[clap(
+        short = 'i',
+        long,
+        value_parser = clap::value_parser!(u64).range(1..),
+        default_value_t = 60,
+        help = "report interval in seconds"
+    )]
+    interval: u64,
     #[clap(short = 'n', long, value_parser, help = "enable vnstat, default:false")]
     vnstat: bool,
     #[clap(long = "json", value_parser, help = "use json protocol, default:false")]
@@ -94,7 +100,7 @@ fn http_report(args: &Args, stat_base: &mut StatRequest) -> Result<()> {
             }
         });
 
-        thread::sleep(Duration::from_millis(INTERVAL_MS));
+        thread::sleep(Duration::from_secs(args.interval));
     }
 }
 
@@ -136,4 +142,39 @@ async fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Args;
+    use clap::{CommandFactory, Parser};
+
+    #[test]
+    fn report_interval_defaults_to_sixty_seconds() {
+        let args = Args::try_parse_from(["stat_client"]).unwrap();
+        assert_eq!(args.interval, 60);
+    }
+
+    #[test]
+    fn short_report_interval_is_parsed_in_seconds() {
+        let args = Args::try_parse_from(["stat_client", "-i", "10"]).unwrap();
+        assert_eq!(args.interval, 10);
+    }
+
+    #[test]
+    fn long_report_interval_is_parsed_in_seconds() {
+        let args = Args::try_parse_from(["stat_client", "--interval", "10"]).unwrap();
+        assert_eq!(args.interval, 10);
+    }
+
+    #[test]
+    fn zero_report_interval_is_rejected() {
+        assert!(Args::try_parse_from(["stat_client", "--interval", "0"]).is_err());
+    }
+
+    #[test]
+    fn help_describes_report_interval_in_seconds() {
+        let help = Args::command().render_help().to_string();
+        assert!(help.contains("report interval in seconds"));
+    }
 }

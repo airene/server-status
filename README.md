@@ -27,7 +27,7 @@
 - [x] 增加 udeps 检查 github action
 - [x] 请求数据状态支持跨域，最后可能会和 **HomeCenter** 集成到一起
 - [ ] 安全传输 tls
-- [ ] 自定义数据采集间隔
+- [x] 自定义数据上报间隔
 - [ ] 不依赖 linux native 方式收集数据，从而支持更多架构的设备，比如路由器
 
 
@@ -35,5 +35,4 @@
 ## 感谢
 [ServerStatus-Rust](https://github.com/zdz/ServerStatus-Rust)
 [Rust语言圣经](https://github.com/sunface/rust-course)
-
 
