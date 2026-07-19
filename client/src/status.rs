@@ -57,22 +57,34 @@ static IFACE_IGNORE_VEC: &[&str] = &["lo", "docker", "vnet", "veth", "vmbr", "ku
 
 pub fn get_vnstat_traffic() -> (u64, u64) {
     let local_now = Local::now();
-    let (mut network_in, mut network_out) = (0, 0);
     let a = Command::new("/usr/bin/vnstat")
         .args(&["--json", "m"])
         .output()
         .expect("failed to execute vnstat")
         .stdout;
     let b = str::from_utf8(&a).unwrap();
-    let j: HashMap<&str, serde_json::Value> = serde_json::from_str(b).unwrap();
+    parse_vnstat_month_traffic(b, local_now.year(), local_now.month())
+}
+
+fn parse_vnstat_month_traffic(json: &str, year: i32, month: u32) -> (u64, u64) {
+    let (mut network_in, mut network_out) = (0, 0);
+    let j: serde_json::Value = serde_json::from_str(json).unwrap();
     for iface in j["interfaces"].as_array().unwrap() {
         let name = iface["name"].as_str().unwrap();
         if IFACE_IGNORE_VEC.iter().any(|sk| name.contains(*sk)) {
             continue;
         }
-        let total_o = iface["traffic"]["total"].as_object().unwrap();
-        network_in += total_o["rx"].as_u64().unwrap();
-        network_out += total_o["tx"].as_u64().unwrap();
+
+        let Some(entries) = iface["traffic"]["month"].as_array() else {
+            continue;
+        };
+        for entry in entries {
+            let date = &entry["date"];
+            if date["year"].as_i64() == Some(i64::from(year)) && date["month"].as_u64() == Some(u64::from(month)) {
+                network_in += entry["rx"].as_u64().unwrap();
+                network_out += entry["tx"].as_u64().unwrap();
+            }
+        }
     }
 
     (network_in, network_out)
@@ -251,5 +263,77 @@ pub fn sample(args: &Args, stat: &mut StatRequest) {
     if let Ok(o) = G_NET_SPEED.lock() {
         stat.network_rx = o.netrx;
         stat.network_tx = o.nettx;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_vnstat_month_traffic;
+
+    #[test]
+    fn vnstat_traffic_sums_only_current_month_for_included_interfaces() {
+        let json = r#"
+        {
+          "interfaces": [
+            {
+              "name": "eth0",
+              "traffic": {
+                "total": { "rx": 9000, "tx": 8000 },
+                "month": [
+                  { "date": { "year": 2026, "month": 6 }, "rx": 100, "tx": 200 },
+                  { "date": { "year": 2026, "month": 7 }, "rx": 10, "tx": 20 }
+                ]
+              }
+            },
+            {
+              "name": "ens18",
+              "traffic": {
+                "total": { "rx": 7000, "tx": 6000 },
+                "month": [
+                  { "date": { "year": 2026, "month": 7 }, "rx": 30, "tx": 40 }
+                ]
+              }
+            },
+            {
+              "name": "docker0",
+              "traffic": {
+                "total": { "rx": 5000, "tx": 4000 },
+                "month": [
+                  { "date": { "year": 2026, "month": 7 }, "rx": 50, "tx": 60 }
+                ]
+              }
+            }
+          ]
+        }
+        "#;
+
+        assert_eq!(parse_vnstat_month_traffic(json, 2026, 7), (40, 60));
+    }
+
+    #[test]
+    fn vnstat_traffic_is_zero_when_current_month_is_missing() {
+        let json = r#"
+        {
+          "interfaces": [
+            {
+              "name": "eth0",
+              "traffic": {
+                "total": { "rx": 9000, "tx": 8000 },
+                "month": [
+                  { "date": { "year": 2026, "month": 6 }, "rx": 100, "tx": 200 }
+                ]
+              }
+            },
+            {
+              "name": "ens18",
+              "traffic": {
+                "total": { "rx": 7000, "tx": 6000 }
+              }
+            }
+          ]
+        }
+        "#;
+
+        assert_eq!(parse_vnstat_month_traffic(json, 2026, 7), (0, 0));
     }
 }
